@@ -95,25 +95,27 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
     }
   };
 
-  const divisions = [
-    'Semua',
-    'Talent Acquisition',
-    'Talent Development',
-    'Organizational Development',
-    'Employee Benefit',
-    'Administration',
-    'Graphic Design',
-    'Copywriting',
-    'Content Coordinator',
-    'Video Editor',
-    'Public Relation',
-    'Social Media Officer',
-    'Key Opinion Leader Coordinator',
-    'Representative',
-    'Program Specialist',
-    'Project Representative',
-    'Community & Digital Marketing'
-  ];
+  const divisions = Array.from(
+    new Set([
+      'Semua',
+      'Talent Acquisition',
+      'Talent Development',
+      'Organizational Development',
+      'Employee Benefit',
+      'Administration',
+      'Graphic Design',
+      'Copywriting',
+      'Content Coordinator',
+      'Video Editor',
+      'Public Relation',
+      'Social Media Officer',
+      'Key Opinion Leader Coordinator',
+      'Representative',
+      'Program Specialist',
+      'Project Representative',
+      'Community & Digital Marketing'
+    ])
+  );
 
   const query = globalSearch.toLowerCase();
 
@@ -388,9 +390,9 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
           {/* Period Filter Tabs */}
           <div className="flex items-center gap-2 overflow-x-auto pb-1 custom-scrollbar">
-            {periods.map((p) => (
+            {periods.map((p, idx) => (
               <button
-                key={p}
+                key={`period-${p}-${idx}`}
                 onClick={() => setSelectedPeriod(p)}
                 className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
                   selectedPeriod === p
@@ -410,8 +412,8 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
               onChange={(e) => setSelectedDivision(e.target.value)}
               className="bg-slate-50 border border-slate-200 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-semibold focus:ring-1 focus:ring-[#006194] outline-none"
             >
-              {divisions.map((d) => (
-                <option key={d} value={d}>
+              {divisions.map((d, idx) => (
+                <option key={`div-${d}-${idx}`} value={d}>
                   Divisi: {d}
                 </option>
               ))}

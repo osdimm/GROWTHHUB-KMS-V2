@@ -156,7 +156,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
 
               return (
                 <div
-                  key={opt.value}
+                  key={`opt-${opt.value}-${idx}`}
                   onClick={() => handleSelectOption(opt.value)}
                   onMouseEnter={() => setHighlightedIndex(idx)}
                   className={`px-3.5 py-2.5 text-xs font-medium cursor-pointer flex items-center justify-between transition-colors ${

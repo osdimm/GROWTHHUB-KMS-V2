@@ -342,27 +342,30 @@ export const ForumDiskusiView: React.FC<ForumDiskusiViewProps> = ({
     }
   }, [targetHighlightCommentId, selectedTopicId]);
 
-  const divisionsList =
-    categories && categories.length > 0
-      ? categories.map((c) => c.name)
-      : [
-          'Talent Acquisition',
-          'Talent Development',
-          'Organizational Development',
-          'Employee Benefit',
-          'Administration',
-          'Graphic Design',
-          'Copywriting',
-          'Content Coordinator',
-          'Video Editor',
-          'Public Relation',
-          'Social Media Officer',
-          'Key Opinion Leader Coordinator',
-          'Representative',
-          'Program Specialist',
-          'Project Representative',
-          'Community & Digital Marketing'
-        ];
+  const divisionsList = Array.from(
+    new Set(
+      categories && categories.length > 0
+        ? categories.map((c) => c.name)
+        : [
+            'Talent Acquisition',
+            'Talent Development',
+            'Organizational Development',
+            'Employee Benefit',
+            'Administration',
+            'Graphic Design',
+            'Copywriting',
+            'Content Coordinator',
+            'Video Editor',
+            'Public Relation',
+            'Social Media Officer',
+            'Key Opinion Leader Coordinator',
+            'Representative',
+            'Program Specialist',
+            'Project Representative',
+            'Community & Digital Marketing'
+          ]
+    )
+  );
 
   const [showNewTopicModal, setShowNewTopicModal] = useState(false);
   const [newTopicTitle, setNewTopicTitle] = useState('');
@@ -612,8 +615,8 @@ const formatCleanTaggedMessage = (rawText: string, targetAuthor: string): string
                   className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 focus:ring-1 focus:ring-[#006194] outline-none cursor-pointer"
                 >
                   <option value="Semua Divisi">Semua Divisi</option>
-                  {divisionsList.map((d) => (
-                    <option key={d} value={d}>
+                  {divisionsList.map((d, idx) => (
+                    <option key={`div-opt-${d}-${idx}`} value={d}>
                       {d}
                     </option>
                   ))}

@@ -77,25 +77,27 @@ export const DataPenggunaView: React.FC<DataPenggunaViewProps> = ({
   const [newRole, setNewRole] = useState<UserRole>('Karyawan');
   const [newDivision, setNewDivision] = useState('Talent Development');
 
-  const divisions = [
-    'Semua',
-    'Talent Acquisition',
-    'Talent Development',
-    'Organizational Development',
-    'Employee Benefit',
-    'Administration',
-    'Graphic Design',
-    'Copywriting',
-    'Content Coordinator',
-    'Video Editor',
-    'Public Relation',
-    'Social Media Officer',
-    'Key Opinion Leader Coordinator',
-    'Representative',
-    'Program Specialist',
-    'Project Representative',
-    'Community & Digital Marketing'
-  ];
+  const divisions = Array.from(
+    new Set([
+      'Semua',
+      'Talent Acquisition',
+      'Talent Development',
+      'Organizational Development',
+      'Employee Benefit',
+      'Administration',
+      'Graphic Design',
+      'Copywriting',
+      'Content Coordinator',
+      'Video Editor',
+      'Public Relation',
+      'Social Media Officer',
+      'Key Opinion Leader Coordinator',
+      'Representative',
+      'Program Specialist',
+      'Project Representative',
+      'Community & Digital Marketing'
+    ])
+  );
 
   const filteredDivisions = divisions.filter((d) =>
     d.toLowerCase().includes(divisionSearch.toLowerCase())
@@ -780,8 +782,8 @@ export const DataPenggunaView: React.FC<DataPenggunaViewProps> = ({
                     onChange={(e) => setNewDivision(e.target.value)}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-[#006194]/20"
                   >
-                    {divisions.filter((d) => d !== 'Semua').map((d) => (
-                      <option key={d} value={d}>
+                    {divisions.filter((d) => d !== 'Semua').map((d, idx) => (
+                      <option key={`div-new-${d}-${idx}`} value={d}>
                         {d}
                       </option>
                     ))}
@@ -1078,8 +1080,8 @@ export const DataPenggunaView: React.FC<DataPenggunaViewProps> = ({
                     onChange={(e) => setEditDivision(e.target.value)}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-[#006194]/20"
                   >
-                    {divisions.filter((d) => d !== 'Semua').map((d) => (
-                      <option key={d} value={d}>
+                    {divisions.filter((d) => d !== 'Semua').map((d, idx) => (
+                      <option key={`div-edit-${d}-${idx}`} value={d}>
                         {d}
                       </option>
                     ))}

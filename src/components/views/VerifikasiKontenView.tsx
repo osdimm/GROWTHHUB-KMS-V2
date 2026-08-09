@@ -85,25 +85,27 @@ export const VerifikasiKontenView: React.FC<VerifikasiKontenViewProps> = ({
     setVerificationNote('');
   };
 
-  const categories = [
-    'ALL',
-    'Talent Acquisition',
-    'Talent Development',
-    'Organizational Development',
-    'Employee Benefit',
-    'Administration',
-    'Graphic Design',
-    'Copywriting',
-    'Content Coordinator',
-    'Video Editor',
-    'Public Relation',
-    'Social Media Officer',
-    'Key Opinion Leader Coordinator',
-    'Representative',
-    'Program Specialist',
-    'Project Representative',
-    'Community & Digital Marketing'
-  ];
+  const categories = Array.from(
+    new Set([
+      'ALL',
+      'Talent Acquisition',
+      'Talent Development',
+      'Organizational Development',
+      'Employee Benefit',
+      'Administration',
+      'Graphic Design',
+      'Copywriting',
+      'Content Coordinator',
+      'Video Editor',
+      'Public Relation',
+      'Social Media Officer',
+      'Key Opinion Leader Coordinator',
+      'Representative',
+      'Program Specialist',
+      'Project Representative',
+      'Community & Digital Marketing'
+    ])
+  );
 
   return (
     <div className="space-y-6">
@@ -148,9 +150,9 @@ export const VerifikasiKontenView: React.FC<VerifikasiKontenViewProps> = ({
 
             {/* Category Filter Chips */}
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 custom-scrollbar text-[11px] font-semibold">
-              {categories.map((cat) => (
+              {categories.map((cat, idx) => (
                 <button
-                  key={cat}
+                  key={`cat-verif-${cat}-${idx}`}
                   onClick={() => setFilterCategory(cat)}
                   className={`px-3 py-1 rounded-lg transition-all whitespace-nowrap shrink-0 ${
                     filterCategory === cat

@@ -17,25 +17,27 @@ export const HakAksesView: React.FC<HakAksesViewProps> = ({
   const [showDivDropdown, setShowDivDropdown] = useState(false);
   const [divisionSearch, setDivisionSearch] = useState('');
 
-  const divisions = [
-    'Semua Divisi',
-    'Talent Acquisition',
-    'Talent Development',
-    'Organizational Development',
-    'Employee Benefit',
-    'Administration',
-    'Graphic Design',
-    'Copywriting',
-    'Content Coordinator',
-    'Video Editor',
-    'Public Relation',
-    'Social Media Officer',
-    'Key Opinion Leader Coordinator',
-    'Representative',
-    'Program Specialist',
-    'Project Representative',
-    'Community & Digital Marketing'
-  ];
+  const divisions = Array.from(
+    new Set([
+      'Semua Divisi',
+      'Talent Acquisition',
+      'Talent Development',
+      'Organizational Development',
+      'Employee Benefit',
+      'Administration',
+      'Graphic Design',
+      'Copywriting',
+      'Content Coordinator',
+      'Video Editor',
+      'Public Relation',
+      'Social Media Officer',
+      'Key Opinion Leader Coordinator',
+      'Representative',
+      'Program Specialist',
+      'Project Representative',
+      'Community & Digital Marketing'
+    ])
+  );
 
   const filteredDivisions = divisions.filter((d) =>
     d.toLowerCase().includes(divisionSearch.toLowerCase())
@@ -100,9 +102,9 @@ export const HakAksesView: React.FC<HakAksesViewProps> = ({
                 </div>
               </div>
               <div className="max-h-56 overflow-y-auto custom-scrollbar py-1">
-                {filteredDivisions.map((div) => (
+                {filteredDivisions.map((div, idx) => (
                   <button
-                    key={div}
+                    key={`div-hak-${div}-${idx}`}
                     onClick={() => {
                       setSelectedDivisionFilter(div);
                       setShowDivDropdown(false);
