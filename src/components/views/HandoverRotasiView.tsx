@@ -3,6 +3,8 @@ import { HandoverDoc } from '../../types';
 import { downloadDocumentFile, readFileAsDataURL } from '../../utils/documentDownloader';
 import { uploadFileToSupabaseStorage } from '../../services/supabaseService';
 import { CustomSelect } from '../CustomSelect';
+import { SpreadsheetPreview } from '../SpreadsheetPreview';
+import { isSpreadsheetFile, isPdfFile, isImageFile } from '../../utils/fileTypeHelper';
 
 interface HandoverRotasiViewProps {
   handoverDocs: HandoverDoc[];
@@ -793,6 +795,42 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
                 </div>
               )}
             </div>
+
+            {/* Live Interactive In-App Document Reader Window for Handover */}
+            {previewDoc.fileUrl && (
+              <div className="mb-5 border border-slate-300 dark:border-slate-700 rounded-2xl overflow-hidden shadow-lg bg-white dark:bg-slate-900">
+                <div className="bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white px-4 py-2.5 flex items-center justify-between text-xs font-medium border-b border-slate-200 dark:border-slate-700">
+                  <div className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-[18px]">auto_stories</span>
+                    <span className="font-bold tracking-wide">Pembaca Dokumen Handover</span>
+                  </div>
+                  <span className="bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded text-slate-800 dark:text-slate-200 font-mono text-[10px]">
+                    Format: {previewDoc.fileType}
+                  </span>
+                </div>
+                <div className="p-4 sm:p-5 bg-slate-100 dark:bg-slate-900/60 min-h-[250px] max-h-[360px] overflow-y-auto font-sans">
+                  {isSpreadsheetFile(previewDoc.fileType, previewDoc.fileUrl) ? (
+                    <SpreadsheetPreview fileUrl={previewDoc.fileUrl} />
+                  ) : isImageFile(previewDoc.fileType, previewDoc.fileUrl) ? (
+                    <div className="bg-slate-950 p-2 rounded-xl flex items-center justify-center">
+                      <img src={previewDoc.fileUrl} alt={previewDoc.title} className="max-h-[300px] object-contain rounded-lg shadow-md" />
+                    </div>
+                  ) : isPdfFile(previewDoc.fileType, previewDoc.fileUrl) ? (
+                    <iframe
+                      src={previewDoc.fileUrl}
+                      className="w-full h-[300px] border-0 rounded-xl shadow-inner bg-white"
+                      title="Pratinjau PDF Handover"
+                    />
+                  ) : previewDoc.fileUrl.startsWith('http') ? (
+                    <iframe
+                      src={`https://docs.google.com/gview?url=${encodeURIComponent(previewDoc.fileUrl)}&embedded=true`}
+                      className="w-full h-[300px] border-0 rounded-xl shadow-inner bg-white"
+                      title="Pratinjau Dokumen Handover"
+                    />
+                  ) : null}
+                </div>
+              </div>
+            )}
 
             <div className="flex justify-end gap-3">
               {previewDoc.fileType === 'LINK' || previewDoc.linkUrl ? (

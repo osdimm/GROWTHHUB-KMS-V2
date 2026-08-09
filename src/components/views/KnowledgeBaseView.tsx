@@ -3,6 +3,8 @@ import { CategoryItem, KnowledgeArticle, PendingDoc } from '../../types';
 import { downloadDocumentFile, readFileAsDataURL } from '../../utils/documentDownloader';
 import { uploadFileToSupabaseStorage } from '../../services/supabaseService';
 import { CustomSelect } from '../CustomSelect';
+import { SpreadsheetPreview } from '../SpreadsheetPreview';
+import { isSpreadsheetFile, isPdfFile, isImageFile } from '../../utils/fileTypeHelper';
 
 interface KnowledgeBaseViewProps {
   categories: CategoryItem[];
@@ -1002,25 +1004,25 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({
                 </div>
               </div>
 
-              <div className="p-4 sm:p-5 bg-slate-100 min-h-[300px] max-h-[420px] overflow-y-auto font-sans">
-                {previewArticle.fileUrl && previewArticle.fileUrl.startsWith('http') ? (
-                  previewArticle.fileUrl.match(/\.(jpeg|jpg|gif|png|webp)/i) ? (
-                    <div className="bg-slate-950 p-2 rounded-xl flex items-center justify-center">
-                      <img src={previewArticle.fileUrl} alt={previewArticle.title} className="max-h-[360px] object-contain rounded-lg shadow-md" />
-                    </div>
-                  ) : (
-                    <iframe
-                      src={previewArticle.fileType === 'PDF' || previewArticle.fileUrl.endsWith('.pdf') ? previewArticle.fileUrl : `https://docs.google.com/gview?url=${encodeURIComponent(previewArticle.fileUrl)}&embedded=true`}
-                      className="w-full h-[360px] border-0 rounded-xl shadow-inner bg-white"
-                      title="Pratinjau Dokumen Langsung"
-                    />
-                  )
-                ) : previewArticle.fileUrl && previewArticle.fileUrl.startsWith('data:image') ? (
+              <div className="p-4 sm:p-5 bg-slate-100 dark:bg-slate-900/60 min-h-[300px] max-h-[420px] overflow-y-auto font-sans">
+                {previewArticle.fileUrl && isSpreadsheetFile(previewArticle.fileType, previewArticle.fileUrl) ? (
+                  <SpreadsheetPreview fileUrl={previewArticle.fileUrl} />
+                ) : previewArticle.fileUrl && isImageFile(previewArticle.fileType, previewArticle.fileUrl) ? (
                   <div className="bg-slate-950 p-2 rounded-xl flex items-center justify-center">
                     <img src={previewArticle.fileUrl} alt={previewArticle.title} className="max-h-[360px] object-contain rounded-lg shadow-md" />
                   </div>
-                ) : previewArticle.fileUrl && previewArticle.fileUrl.startsWith('data:application/pdf') ? (
-                  <iframe src={previewArticle.fileUrl} className="w-full h-[360px] border-0 rounded-xl shadow-inner bg-white" title="Pratinjau PDF" />
+                ) : previewArticle.fileUrl && isPdfFile(previewArticle.fileType, previewArticle.fileUrl) ? (
+                  <iframe
+                    src={previewArticle.fileUrl}
+                    className="w-full h-[360px] border-0 rounded-xl shadow-inner bg-white"
+                    title="Pratinjau PDF Langsung"
+                  />
+                ) : previewArticle.fileUrl && previewArticle.fileUrl.startsWith('http') ? (
+                  <iframe
+                    src={`https://docs.google.com/gview?url=${encodeURIComponent(previewArticle.fileUrl)}&embedded=true`}
+                    className="w-full h-[360px] border-0 rounded-xl shadow-inner bg-white"
+                    title="Pratinjau Dokumen Langsung"
+                  />
                 ) : (
                   /* Formatted Interactive Document Paper View for Office Docs / Articles */
                   <div className="bg-white rounded-xl shadow-md border border-slate-200 p-6 max-w-2xl mx-auto space-y-5 text-slate-800 font-sans">
