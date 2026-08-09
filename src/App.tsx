@@ -69,6 +69,8 @@ import { ForumDiskusiView } from './components/views/ForumDiskusiView';
 import { LaporanPenggunaanView } from './components/views/LaporanPenggunaanView';
 import { ProfilPenggunaView } from './components/views/ProfilPenggunaView';
 
+import { autoDetectFileType } from './utils/fileTypeHelper';
+
 // Helpers for safe localStorage setItem to prevent QuotaExceededError crashes
 const safeLocalStorageSet = (key: string, value: string) => {
   try {
@@ -705,7 +707,7 @@ export default function App() {
           summary: targetDoc.description || 'Dokumen terverifikasi.',
           author: targetDoc.author,
           date: targetDoc.submitDate,
-          fileType: targetDoc.fileName?.toLowerCase().endsWith('.pdf') ? 'PDF' : targetDoc.fileName?.toLowerCase().endsWith('.docx') ? 'DOCX' : 'LINK',
+          fileType: autoDetectFileType(targetDoc.fileName || targetDoc.title),
           views: 1,
           contentType: 'file',
           fileBlob: targetDoc.fileBlob,

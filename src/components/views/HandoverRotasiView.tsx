@@ -4,7 +4,7 @@ import { downloadDocumentFile, readFileAsDataURL } from '../../utils/documentDow
 import { uploadFileToSupabaseStorage } from '../../services/supabaseService';
 import { CustomSelect } from '../CustomSelect';
 import { SpreadsheetPreview } from '../SpreadsheetPreview';
-import { isSpreadsheetFile, isPdfFile, isImageFile } from '../../utils/fileTypeHelper';
+import { isSpreadsheetFile, isPdfFile, isImageFile, isLinkDocument, getEffectiveFileType, autoDetectFileType } from '../../utils/fileTypeHelper';
 
 interface HandoverRotasiViewProps {
   handoverDocs: HandoverDoc[];
@@ -268,9 +268,10 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
 
     try {
       setUploadProgress(40);
-      const isLinkOnly = hasLink && !hasFile;
+      const isLinkOnly = !hasFile && hasLink;
       const detectedType = hasFile ? autoDetectFileType(selectedFile!.name) : 'LINK';
       const finalFileType = isLinkOnly ? 'LINK' : detectedType;
+      const finalContentType = isLinkOnly ? 'link' : 'file';
 
       const calculatedSize = isLinkOnly
         ? 'Tautan Eksternal'
@@ -307,9 +308,9 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
         }),
         author: currentUserName,
         authorRole: currentUserRole as any,
-        contentType: hasLink ? 'link' : 'file',
-        linkUrl: hasLink ? linkUrl.trim() : undefined,
-        fileBlob: selectedFile || undefined,
+        contentType: finalContentType,
+        linkUrl: isLinkOnly ? linkUrl.trim() : undefined,
+        fileBlob: isLinkOnly ? undefined : (selectedFile || undefined),
         fileUrl: createdFileUrl,
         views: 1,
         downloads: 0
@@ -483,7 +484,7 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
                 </div>
 
                 <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                  {doc.fileType === 'LINK' || (doc.contentType === 'link' && !doc.fileUrl) ? (
+                  {isLinkDocument(doc) ? (
                     <a
                       href={doc.linkUrl || '#'}
                       target="_blank"
@@ -758,7 +759,7 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Format:</span>
-                <span className="font-bold">{previewDoc.fileType} ({previewDoc.fileSize})</span>
+                <span className="font-bold">{getEffectiveFileType(previewDoc)} ({previewDoc.fileSize})</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Tanggal Unggah:</span>
@@ -780,7 +781,7 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
                   </p>
                 </div>
               )}
-              {(previewDoc.fileType === 'LINK' || previewDoc.linkUrl) && (
+              {isLinkDocument(previewDoc) && (
                 <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between gap-2">
                   <span className="text-slate-400 shrink-0">URL Tautan:</span>
                   <a
@@ -833,7 +834,7 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
             )}
 
             <div className="flex justify-end gap-3">
-              {previewDoc.fileType === 'LINK' || (previewDoc.contentType === 'link' && !previewDoc.fileUrl) ? (
+              {isLinkDocument(previewDoc) ? (
                 <a
                   href={previewDoc.linkUrl || '#'}
                   target="_blank"
