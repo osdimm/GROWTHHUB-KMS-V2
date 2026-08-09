@@ -85,6 +85,14 @@ const safeLocalStorageSet = (key: string, value: string) => {
   }
 };
 
+const safeSessionStorageSet = (key: string, value: string) => {
+  try {
+    sessionStorage.setItem(key, value);
+  } catch (e) {
+    console.warn(`Gagal menyimpan session '${key}' ke sessionStorage:`, e);
+  }
+};
+
 const stripHeavyFields = (items: any[]) =>
   items.map(({ fileBlob, fileUrl, ...rest }) => ({
     ...rest,
@@ -99,7 +107,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<NavigationTab>(() => {
     const savedLoggedIn = sessionStorage.getItem('kms_is_logged_in') === 'true';
     if (!savedLoggedIn) return 'login';
-    const savedTab = localStorage.getItem('kms_active_tab');
+    const savedTab = sessionStorage.getItem('kms_active_tab');
     return (savedTab as NavigationTab) || 'dashboard';
   });
 
@@ -107,13 +115,13 @@ export default function App() {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  // Active Role & Current User State (Persisted in localStorage)
+  // Active Role & Current User State (Persisted in sessionStorage per-tab)
   const [activeRole, setActiveRole] = useState<UserRole>(() => {
-    const saved = localStorage.getItem('kms_active_role');
+    const saved = sessionStorage.getItem('kms_active_role');
     return (saved as UserRole) || 'Admin';
   });
   const [currentUserId, setCurrentUserId] = useState<string>(() => {
-    return localStorage.getItem('kms_current_user_id') || 'u-admin';
+    return sessionStorage.getItem('kms_current_user_id') || 'u-admin';
   });
   const [showForcePasswordModal, setShowForcePasswordModal] = useState<boolean>(true);
 
@@ -161,32 +169,24 @@ export default function App() {
     }
   }, [themeMode]);
 
-  // Save session state to sessionStorage & localStorage safely
+  // Save session state to sessionStorage safely (per tab isolation)
   useEffect(() => {
     if (isLoggedIn) {
-      try {
-        sessionStorage.setItem('kms_is_logged_in', 'true');
-      } catch (e) {
-        console.warn('Gagal set sessionStorage:', e);
-      }
-      safeLocalStorageSet('kms_active_tab', activeTab);
+      safeSessionStorageSet('kms_is_logged_in', 'true');
+      safeSessionStorageSet('kms_active_tab', activeTab);
+      safeSessionStorageSet('kms_active_role', activeRole);
+      safeSessionStorageSet('kms_current_user_id', currentUserId);
     } else {
       try {
         sessionStorage.removeItem('kms_is_logged_in');
-        localStorage.removeItem('kms_active_tab');
+        sessionStorage.removeItem('kms_active_tab');
+        sessionStorage.removeItem('kms_active_role');
+        sessionStorage.removeItem('kms_current_user_id');
       } catch (e) {
         console.warn('Gagal remove session state:', e);
       }
     }
-  }, [isLoggedIn, activeTab]);
-
-  useEffect(() => {
-    safeLocalStorageSet('kms_active_role', activeRole);
-  }, [activeRole]);
-
-  useEffect(() => {
-    safeLocalStorageSet('kms_current_user_id', currentUserId);
-  }, [currentUserId]);
+  }, [isLoggedIn, activeTab, activeRole, currentUserId]);
 
   // App Centralized State (with localStorage persistence for views & downloads)
   const [users, setUsers] = useState<User[]>(initialUsers);
@@ -1503,7 +1503,9 @@ export default function App() {
           setShowLogoutModal(false);
           setIsLoggedIn(false);
           sessionStorage.removeItem('kms_is_logged_in');
-          localStorage.removeItem('kms_active_tab');
+          sessionStorage.removeItem('kms_active_tab');
+          sessionStorage.removeItem('kms_active_role');
+          sessionStorage.removeItem('kms_current_user_id');
           setActiveTab('login');
         }}
       />
