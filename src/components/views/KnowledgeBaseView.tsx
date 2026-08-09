@@ -104,10 +104,12 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
 
-  const autoDetectType = (fileName: string): 'PDF' | 'DOCX' | 'E-Book' | 'Video' | 'Artikel' => {
+  const autoDetectType = (fileName: string): KnowledgeArticle['fileType'] => {
     const ext = fileName.split('.').pop()?.toLowerCase();
     if (ext === 'pdf') return 'PDF';
     if (['docx', 'doc'].includes(ext || '')) return 'DOCX';
+    if (['xlsx', 'xls', 'csv'].includes(ext || '')) return 'XLSX';
+    if (['pptx', 'ppt'].includes(ext || '')) return 'PPTX';
     if (['epub', 'mobi'].includes(ext || '')) return 'E-Book';
     if (['mp4', 'mov', 'avi', 'mkv'].includes(ext || '')) return 'Video';
     return 'Artikel';
@@ -277,23 +279,24 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({
 
     try {
       setUploadProgress(40);
+      const isLinkOnly = hasLink && !hasFile;
       const finalFileType = hasFile ? autoDetectType(selectedFile!.name) : 'LINK';
-      const finalContentType = hasLink ? 'link' : 'file';
+      const finalContentType = isLinkOnly ? 'link' : 'file';
 
-      const calculatedFileSize = hasLink
+      const calculatedFileSize = isLinkOnly
         ? 'Tautan Eksternal'
         : selectedFile
         ? formatFileSize(selectedFile.size)
         : '2.5 MB';
 
-      const calculatedFileName = hasLink
+      const calculatedFileName = isLinkOnly
         ? `${newArtTitle}.link`
         : selectedFile
         ? selectedFile.name
         : `${newArtTitle.toLowerCase().replace(/\s+/g, '_')}.${finalFileType.toLowerCase()}`;
 
       let createdFileUrl: string | undefined = undefined;
-      if (selectedFile && !hasLink) {
+      if (selectedFile) {
         try {
           setUploadProgress(70);
           const storageUrl = await uploadFileToSupabaseStorage(selectedFile);
@@ -521,7 +524,12 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({
                         {art.category}
                       </span>
                       <div className="flex items-center gap-1.5">
-                        {art.fileType === 'LINK' || art.linkUrl ? (
+                        {art.fileType === 'XLSX' ? (
+                          <span className="px-2.5 py-0.5 bg-emerald-100 text-emerald-800 border border-emerald-200 rounded text-[11px] font-extrabold flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[14px]">table_chart</span>
+                            <span>XLSX</span>
+                          </span>
+                        ) : art.fileType === 'LINK' || (art.contentType === 'link' && !art.fileUrl) ? (
                           <span className="px-2.5 py-0.5 bg-indigo-100 text-indigo-800 border border-indigo-200 rounded text-[11px] font-extrabold flex items-center gap-1">
                             <span className="material-symbols-outlined text-[14px]">link</span>
                             <span>LINK</span>
@@ -569,7 +577,7 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({
                       <span>{art.author}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      {art.fileType === 'LINK' || art.contentType === 'link' || art.linkUrl ? (
+                      {art.fileType === 'LINK' || (art.contentType === 'link' && !art.fileUrl) ? (
                         <a
                           href={art.linkUrl || 'https://drive.google.com'}
                           target="_blank"
@@ -1126,7 +1134,7 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({
               )}
 
               <div className="flex items-center justify-end gap-2">
-                {previewArticle.fileType === 'LINK' || previewArticle.linkUrl ? (
+                {previewArticle.fileType === 'LINK' || (previewArticle.contentType === 'link' && !previewArticle.fileUrl) ? (
                   <a
                     href={previewArticle.linkUrl || '#'}
                     target="_blank"

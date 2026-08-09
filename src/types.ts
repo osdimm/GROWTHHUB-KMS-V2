@@ -46,7 +46,7 @@ export interface KnowledgeArticle {
   summary: string;
   author: string;
   date: string;
-  fileType: 'PDF' | 'DOCX' | 'E-Book' | 'Video' | 'Artikel' | 'LINK';
+  fileType: 'PDF' | 'DOCX' | 'XLSX' | 'PPTX' | 'E-Book' | 'Video' | 'Artikel' | 'LINK';
   views: number;
   downloads?: number;
   downloadUrl?: string;

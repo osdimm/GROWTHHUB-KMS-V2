@@ -483,7 +483,7 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
                 </div>
 
                 <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                  {doc.fileType === 'LINK' || doc.linkUrl ? (
+                  {doc.fileType === 'LINK' || (doc.contentType === 'link' && !doc.fileUrl) ? (
                     <a
                       href={doc.linkUrl || '#'}
                       target="_blank"
@@ -833,7 +833,7 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
             )}
 
             <div className="flex justify-end gap-3">
-              {previewDoc.fileType === 'LINK' || previewDoc.linkUrl ? (
+              {previewDoc.fileType === 'LINK' || (previewDoc.contentType === 'link' && !previewDoc.fileUrl) ? (
                 <a
                   href={previewDoc.linkUrl || '#'}
                   target="_blank"
