@@ -69,6 +69,26 @@ import { ForumDiskusiView } from './components/views/ForumDiskusiView';
 import { LaporanPenggunaanView } from './components/views/LaporanPenggunaanView';
 import { ProfilPenggunaView } from './components/views/ProfilPenggunaView';
 
+// Helpers for safe localStorage setItem to prevent QuotaExceededError crashes
+const safeLocalStorageSet = (key: string, value: string) => {
+  try {
+    localStorage.setItem(key, value);
+  } catch (e) {
+    console.warn(`Gagal menyimpan cache '${key}' ke localStorage (kemungkinan kuota penuh):`, e);
+    try {
+      localStorage.removeItem(key);
+    } catch {
+      // biarkan, tidak fatal
+    }
+  }
+};
+
+const stripHeavyFields = (items: any[]) =>
+  items.map(({ fileBlob, fileUrl, ...rest }) => ({
+    ...rest,
+    ...(fileUrl && !fileUrl.startsWith('data:') ? { fileUrl } : {})
+  }));
+
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
     return sessionStorage.getItem('kms_is_logged_in') === 'true';
@@ -110,11 +130,7 @@ export default function App() {
 
   // Apply Dark/Light/System theme to document root & body
   useEffect(() => {
-    try {
-      localStorage.setItem('kms_theme', themeMode);
-    } catch (e) {
-      console.error(e);
-    }
+    safeLocalStorageSet('kms_theme', themeMode);
 
     const root = document.documentElement;
     const body = document.body;
@@ -143,23 +159,31 @@ export default function App() {
     }
   }, [themeMode]);
 
-  // Save session state to sessionStorage & localStorage
+  // Save session state to sessionStorage & localStorage safely
   useEffect(() => {
     if (isLoggedIn) {
-      sessionStorage.setItem('kms_is_logged_in', 'true');
-      localStorage.setItem('kms_active_tab', activeTab);
+      try {
+        sessionStorage.setItem('kms_is_logged_in', 'true');
+      } catch (e) {
+        console.warn('Gagal set sessionStorage:', e);
+      }
+      safeLocalStorageSet('kms_active_tab', activeTab);
     } else {
-      sessionStorage.removeItem('kms_is_logged_in');
-      localStorage.removeItem('kms_active_tab');
+      try {
+        sessionStorage.removeItem('kms_is_logged_in');
+        localStorage.removeItem('kms_active_tab');
+      } catch (e) {
+        console.warn('Gagal remove session state:', e);
+      }
     }
   }, [isLoggedIn, activeTab]);
 
   useEffect(() => {
-    localStorage.setItem('kms_active_role', activeRole);
+    safeLocalStorageSet('kms_active_role', activeRole);
   }, [activeRole]);
 
   useEffect(() => {
-    localStorage.setItem('kms_current_user_id', currentUserId);
+    safeLocalStorageSet('kms_current_user_id', currentUserId);
   }, [currentUserId]);
 
   // App Centralized State (with localStorage persistence for views & downloads)
@@ -171,7 +195,7 @@ export default function App() {
       const saved = localStorage.getItem('kms_articles');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) return stripHeavyFields(parsed);
       }
     } catch (e) {
       console.error('Error loading kms_articles from localStorage', e);
@@ -184,7 +208,7 @@ export default function App() {
       const saved = localStorage.getItem('kms_handover_docs');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) return stripHeavyFields(parsed);
       }
     } catch (e) {
       console.error('Error loading kms_handover_docs from localStorage', e);
@@ -210,22 +234,52 @@ export default function App() {
   });
   const [isLoadingSupabase, setIsLoadingSupabase] = useState<boolean>(true);
 
-  // Sync articles, handoverDocs & notifications to localStorage
+  // One-time automatic cleanup for legacy bloated localStorage data
+  useEffect(() => {
+    try {
+      const hasCleaned = localStorage.getItem('kms_storage_v2_cleaned');
+      if (!hasCleaned) {
+        ['kms_articles', 'kms_handover_docs'].forEach((key) => {
+          const raw = localStorage.getItem(key);
+          if (raw && (raw.includes('data:') || raw.length > 500000)) {
+            try {
+              const parsed = JSON.parse(raw);
+              if (Array.isArray(parsed)) {
+                const cleaned = stripHeavyFields(parsed);
+                safeLocalStorageSet(key, JSON.stringify(cleaned));
+              }
+            } catch {
+              try {
+                localStorage.removeItem(key);
+              } catch {
+                // Ignore
+              }
+            }
+          }
+        });
+        safeLocalStorageSet('kms_storage_v2_cleaned', 'true');
+      }
+    } catch (err) {
+      console.warn('Automatic localStorage cleanup warning:', err);
+    }
+  }, []);
+
+  // Sync articles, handoverDocs & notifications to localStorage safely
   useEffect(() => {
     if (articles && articles.length > 0) {
-      localStorage.setItem('kms_articles', JSON.stringify(articles));
+      safeLocalStorageSet('kms_articles', JSON.stringify(stripHeavyFields(articles)));
     }
   }, [articles]);
 
   useEffect(() => {
     if (handoverDocs && handoverDocs.length > 0) {
-      localStorage.setItem('kms_handover_docs', JSON.stringify(handoverDocs));
+      safeLocalStorageSet('kms_handover_docs', JSON.stringify(stripHeavyFields(handoverDocs)));
     }
   }, [handoverDocs]);
 
   useEffect(() => {
     if (notifications && notifications.length > 0) {
-      localStorage.setItem('kms_notifications', JSON.stringify(notifications));
+      safeLocalStorageSet('kms_notifications', JSON.stringify(notifications));
     }
   }, [notifications]);
 
