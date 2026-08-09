@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from './lib/supabase';
 import {
   NavigationTab,
@@ -376,6 +376,8 @@ export default function App() {
   const [targetForumTopicId, setTargetForumTopicId] = useState<string | null>(null);
   const [targetHighlightCommentId, setTargetHighlightCommentId] = useState<string | null>(null);
 
+  const processedReplyNotifIds = useRef<Set<string>>(new Set());
+
   const checkAndShowReplyPopup = (newComment: any, topicsList: ForumTopic[] = forumTopics) => {
     if (!newComment) return;
 
@@ -383,6 +385,13 @@ export default function App() {
     let foundTopicId: string = newComment.topic_id || newComment.topicId || '';
     const parentId = newComment.parent_id || newComment.parentId;
     const commentAuthor = newComment.author || newComment.user_name || 'Pengguna';
+    const commentIdClean = newComment.id || newComment.commentId || `${Date.now()}`;
+    const replyNotifId = `notif-reply-${commentIdClean}`;
+
+    // Cooldown & deduplication guard: if this reply notification ID was already created in this session, skip!
+    if (processedReplyNotifIds.current.has(replyNotifId)) {
+      return;
+    }
 
     // 1. Find parent comment by parentId across all topics
     if (parentId && topicsList && topicsList.length > 0) {
@@ -408,43 +417,54 @@ export default function App() {
 
     if (!targetAuthor) return;
 
+    // Do not create notification if replying to oneself
+    if (commentAuthor.toLowerCase() === targetAuthor.toLowerCase()) {
+      return;
+    }
+
+    // Mark as processed immediately so duplicate re-evaluations won't recreate it
+    processedReplyNotifIds.current.add(replyNotifId);
+
     const loggedInUser = users.find((u) => u.id === currentUserId) || users[0];
     const loggedInUserName = loggedInUser ? loggedInUser.name : '';
 
     const isSender = loggedInUserName && commentAuthor.toLowerCase() === loggedInUserName.toLowerCase();
 
-    // The sender of the reply NEVER receives the popup toast on their own screen
-    if (isSender) {
-      // Append notification to global state for the recipient to see when logged in
-      const replyNotifItem: AppNotification = {
-        id: `notif-reply-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-        title: `💬 Balasan Komentar dari ${commentAuthor}`,
-        desc: `"${newComment.content || ''}"`,
-        time: 'Baru saja',
-        createdAt: Date.now(),
-        author: commentAuthor,
-        targetUserName: targetAuthor,
-        type: 'info',
-        read: false
-      };
+    // Create ONE deterministic notification item
+    const replyNotifItem: AppNotification = {
+      id: replyNotifId,
+      title: `💬 Balasan Komentar dari ${commentAuthor}`,
+      desc: `"${newComment.content || ''}"`,
+      time: 'Baru saja',
+      createdAt: typeof newComment.createdAt === 'number' ? newComment.createdAt : Date.now(),
+      author: commentAuthor,
+      targetUserName: targetAuthor,
+      type: 'info',
+      read: false
+    };
 
-      setNotifications((prev) => {
-        if (prev.some((n) => n.id === replyNotifItem.id || (n.desc === replyNotifItem.desc && n.author === commentAuthor))) {
-          return prev;
-        }
-        return [replyNotifItem, ...prev];
-      });
-      saveNotificationToSupabase(replyNotifItem).catch((err) =>
-        console.error('Gagal simpan notifikasi balasan ke Supabase:', err)
-      );
-      return;
-    }
+    setNotifications((prev) => {
+      if (
+        prev.some(
+          (n) =>
+            n.id === replyNotifItem.id ||
+            (n.targetUserName === targetAuthor && n.desc === replyNotifItem.desc && n.author === commentAuthor)
+        )
+      ) {
+        return prev;
+      }
+      return [replyNotifItem, ...prev];
+    });
+
+    saveNotificationToSupabase(replyNotifItem).catch((err) =>
+      console.error('Gagal simpan notifikasi balasan ke Supabase:', err)
+    );
 
     const isRecipient =
       loggedInUserName && targetAuthor.toLowerCase() === loggedInUserName.toLowerCase();
 
     // Trigger popup toast ONLY for the recipient user who is being replied to / mentioned!
-    if (isRecipient) {
+    if (isRecipient && !isSender) {
       if (!foundTopicId && topicsList.length > 0) {
         foundTopicId = topicsList[0].id;
       }
@@ -456,29 +476,6 @@ export default function App() {
         senderName: commentAuthor,
         message: newComment.content || ''
       });
-
-      // Also append an AppNotification to persistent Notifications list for Header bell!
-      const replyNotifItem: AppNotification = {
-        id: `notif-reply-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-        title: `💬 Balasan Komentar dari ${commentAuthor}`,
-        desc: `"${newComment.content || ''}"`,
-        time: 'Baru saja',
-        createdAt: Date.now(),
-        author: commentAuthor,
-        targetUserName: targetAuthor,
-        type: 'info',
-        read: false
-      };
-
-      setNotifications((prev) => {
-        if (prev.some((n) => n.id === replyNotifItem.id || (n.desc === replyNotifItem.desc && n.author === commentAuthor))) {
-          return prev;
-        }
-        return [replyNotifItem, ...prev];
-      });
-      saveNotificationToSupabase(replyNotifItem).catch((err) =>
-        console.error('Gagal simpan notifikasi balasan ke Supabase:', err)
-      );
 
       // Auto-dismiss after 6 seconds
       setTimeout(() => {
@@ -1122,6 +1119,8 @@ export default function App() {
   };
 
   const handleAddComment = (topicId: string, newComment: ForumComment) => {
+    let updatedTopicsSnapshot: ForumTopic[] = [];
+
     setForumTopics((prev) => {
       const updated = prev.map((t) => {
         if (t.id === topicId) {
@@ -1136,12 +1135,12 @@ export default function App() {
         }
         return t;
       });
-
-      // Trigger instant check for reply notification popup
-      checkAndShowReplyPopup({ ...newComment, topic_id: topicId }, updated);
-
+      updatedTopicsSnapshot = updated;
       return updated;
     });
+
+    // Trigger instant check for reply notification popup outside state reducer
+    checkAndShowReplyPopup({ ...newComment, topic_id: topicId }, updatedTopicsSnapshot);
   };
 
   const handleTogglePinComment = (topicId: string, commentId: string) => {
