@@ -4,6 +4,7 @@ import {
   NavigationTab,
   User,
   CategoryItem,
+  ContentCategoryItem,
   KnowledgeArticle,
   HandoverDoc,
   ForumTopic,
@@ -15,24 +16,15 @@ import {
   AppNotification
 } from './types';
 import {
-  initialUsers,
-  initialCategories,
-  initialArticles,
-  initialHandoverDocs,
-  initialForumTopics,
-  initialActivities,
-  popularTopicsList,
-  initialPendingDocs,
-  initialNotifications
-} from './data/mockData';
-
-import {
   getProfilesFromSupabase,
   saveProfileToSupabase,
   deleteProfileFromSupabase,
   getCategoriesFromSupabase,
   saveCategoryToSupabase,
   deleteCategoryFromSupabase,
+  getContentCategoriesFromSupabase,
+  saveContentCategoryToSupabase,
+  deleteContentCategoryFromSupabase,
   getArticlesFromSupabase,
   saveArticleToSupabase,
   deleteArticleFromSupabase,
@@ -189,8 +181,9 @@ export default function App() {
   }, [isLoggedIn, activeTab, activeRole, currentUserId]);
 
   // App Centralized State (with localStorage persistence for views & downloads)
-  const [users, setUsers] = useState<User[]>(initialUsers);
-  const [categories, setCategories] = useState<CategoryItem[]>(initialCategories);
+  const [users, setUsers] = useState<User[]>([]);
+  const [categories, setCategories] = useState<CategoryItem[]>([]);
+  const [contentCategories, setContentCategories] = useState<ContentCategoryItem[]>([]);
 
   const [articles, setArticles] = useState<KnowledgeArticle[]>(() => {
     try {
@@ -220,7 +213,7 @@ export default function App() {
 
   const [forumTopics, setForumTopics] = useState<ForumTopic[]>([]);
   const [activities, setActivities] = useState<ActivityLog[]>([]);
-  const [popularTopics] = useState<PopularTopic[]>(popularTopicsList);
+  const [popularTopics] = useState<PopularTopic[]>([]);
   const [pendingDocs, setPendingDocs] = useState<PendingDoc[]>([]);
   const [notifications, setNotifications] = useState<AppNotification[]>(() => {
     try {
@@ -232,7 +225,7 @@ export default function App() {
     } catch (e) {
       console.error('Error loading kms_notifications from localStorage', e);
     }
-    return initialNotifications;
+    return [];
   });
   const [isLoadingSupabase, setIsLoadingSupabase] = useState<boolean>(true);
 
@@ -293,6 +286,7 @@ export default function App() {
         const [
           dbUsers,
           dbCategories,
+          dbContentCategories,
           dbArticles,
           dbHandovers,
           dbTopics,
@@ -302,6 +296,7 @@ export default function App() {
         ] = await Promise.all([
           getProfilesFromSupabase(),
           getCategoriesFromSupabase(),
+          getContentCategoriesFromSupabase(),
           getArticlesFromSupabase(),
           getHandoverDocsFromSupabase(),
           getForumTopicsFromSupabase(),
@@ -311,7 +306,8 @@ export default function App() {
         ]);
 
         if (dbUsers && dbUsers.length > 0) setUsers(dbUsers);
-        if (dbCategories !== null) setCategories(dbCategories.length > 0 ? dbCategories : initialCategories);
+        if (dbCategories !== null) setCategories(dbCategories);
+        if (dbContentCategories !== null && dbContentCategories.length > 0) setContentCategories(dbContentCategories);
 
         if (dbArticles !== null && dbArticles.length > 0) {
           setArticles((prev) => {
@@ -393,11 +389,23 @@ export default function App() {
       return;
     }
 
-    // 1. Find parent comment by parentId across all topics
+    // Helper for recursive comment lookup
+    const findCommentRecursive = (commentsList: ForumComment[]): ForumComment | null => {
+      for (const c of commentsList) {
+        if (c.id === parentId || String(c.id) === String(parentId)) return c;
+        if (c.replies && c.replies.length > 0) {
+          const childMatch = findCommentRecursive(c.replies);
+          if (childMatch) return childMatch;
+        }
+      }
+      return null;
+    };
+
+    // 1. Find parent comment by parentId across all topics & nested replies
     if (parentId && topicsList && topicsList.length > 0) {
       for (const topic of topicsList) {
         if (topic.comments) {
-          const found = topic.comments.find((c: any) => c.id === parentId);
+          const found = findCommentRecursive(topic.comments);
           if (found) {
             targetAuthor = found.author;
             if (!foundTopicId) foundTopicId = topic.id;
@@ -417,8 +425,14 @@ export default function App() {
 
     if (!targetAuthor) return;
 
+    const cleanName = (str: string) =>
+      (str || '').replace(/\s*\(.*?\)\s*/g, '').replace(/^@/, '').trim().toLowerCase();
+
+    const cleanCommentAuthor = cleanName(commentAuthor);
+    const cleanTargetAuthor = cleanName(targetAuthor);
+
     // Do not create notification if replying to oneself
-    if (commentAuthor.toLowerCase() === targetAuthor.toLowerCase()) {
+    if (cleanCommentAuthor && cleanTargetAuthor && cleanCommentAuthor === cleanTargetAuthor) {
       return;
     }
 
@@ -427,8 +441,19 @@ export default function App() {
 
     const loggedInUser = users.find((u) => u.id === currentUserId) || users[0];
     const loggedInUserName = loggedInUser ? loggedInUser.name : '';
+    const cleanLoggedIn = cleanName(loggedInUserName);
 
-    const isSender = loggedInUserName && commentAuthor.toLowerCase() === loggedInUserName.toLowerCase();
+    const isSender =
+      cleanLoggedIn &&
+      (cleanCommentAuthor === cleanLoggedIn ||
+        cleanLoggedIn.includes(cleanCommentAuthor) ||
+        cleanCommentAuthor.includes(cleanLoggedIn));
+
+    const isRecipient =
+      cleanLoggedIn &&
+      (cleanTargetAuthor === cleanLoggedIn ||
+        cleanTargetAuthor.includes(cleanLoggedIn) ||
+        cleanLoggedIn.includes(cleanTargetAuthor));
 
     // Create ONE deterministic notification item
     const replyNotifItem: AppNotification = {
@@ -460,11 +485,8 @@ export default function App() {
       console.error('Gagal simpan notifikasi balasan ke Supabase:', err)
     );
 
-    const isRecipient =
-      loggedInUserName && targetAuthor.toLowerCase() === loggedInUserName.toLowerCase();
-
-    // Trigger popup toast ONLY for the recipient user who is being replied to / mentioned!
-    if (isRecipient && !isSender) {
+    // Trigger popup toast alert when reply is posted or received!
+    if (isRecipient || isSender) {
       if (!foundTopicId && topicsList.length > 0) {
         foundTopicId = topicsList[0].id;
       }
@@ -1001,14 +1023,29 @@ export default function App() {
     deleteCategoryFromSupabase(id).catch(console.error);
   };
 
+  // Content Category Handlers
+  const handleAddContentCategory = (newCat: ContentCategoryItem) => {
+    setContentCategories((prev) => [...prev, newCat]);
+  };
+
+  const handleEditContentCategory = (id: string, updated: Partial<ContentCategoryItem>) => {
+    setContentCategories((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, ...updated } : c))
+    );
+  };
+
+  const handleDeleteContentCategory = (id: string) => {
+    setContentCategories((prev) => prev.filter((c) => c.id !== id));
+  };
+
   // Article Handlers
   const handleAddArticle = (newArt: KnowledgeArticle) => {
     setArticles((prev) => [newArt, ...prev]);
     saveArticleToSupabase(newArt).catch(console.error);
-    // update category count
+    // update division category count
     setCategories((prev) =>
       prev.map((c) => {
-        if (c.name === newArt.category) {
+        if (c.name === newArt.division || c.name === newArt.category) {
           const updatedCat = { ...c, contentCount: c.contentCount + 1 };
           saveCategoryToSupabase(updatedCat).catch(console.error);
           return updatedCat;
@@ -1016,19 +1053,41 @@ export default function App() {
         return c;
       })
     );
+    // update content category count
+    if (newArt.contentCategoryId) {
+      setContentCategories((prev) =>
+        prev.map((c) => {
+          if (c.id === newArt.contentCategoryId) {
+            const updatedCat = { ...c, contentCount: c.contentCount + 1 };
+            saveContentCategoryToSupabase(updatedCat).catch(console.error);
+            return updatedCat;
+          }
+          return c;
+        })
+      );
+    }
   };
 
-  const handleEditArticle = (id: string, updated: Partial<KnowledgeArticle>) => {
+  const handleEditArticle = async (id: string, updated: Partial<KnowledgeArticle>) => {
+    let updatedArt: KnowledgeArticle | null = null;
     setArticles((prev) =>
       prev.map((a) => {
         if (a.id === id) {
-          const updatedArt = { ...a, ...updated };
-          saveArticleToSupabase(updatedArt).catch(console.error);
+          updatedArt = { ...a, ...updated };
           return updatedArt;
         }
         return a;
       })
     );
+
+    if (updatedArt) {
+      try {
+        await saveArticleToSupabase(updatedArt);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Terjadi kesalahan tidak diketahui';
+        console.error('❌ Gagal simpan pembaruan artikel ke Supabase:', message);
+      }
+    }
   };
 
   const handleDeleteArticle = (id: string) => {
@@ -1328,10 +1387,14 @@ export default function App() {
             {activeTab === 'knowledge-base' && (
               <KnowledgeBaseView
                 categories={categories}
+                contentCategories={contentCategories}
                 articles={articles}
                 onAddCategory={handleAddCategory}
                 onEditCategory={handleEditCategory}
                 onDeleteCategory={handleDeleteCategory}
+                onAddContentCategory={handleAddContentCategory}
+                onEditContentCategory={handleEditContentCategory}
+                onDeleteContentCategory={handleDeleteContentCategory}
                 onAddArticle={handleAddArticle}
                 onRequestVerification={handleRequestVerification}
                 onEditArticle={handleEditArticle}

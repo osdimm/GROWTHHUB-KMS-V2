@@ -16,6 +16,24 @@ export type UserRole =
   | 'Karyawan'
   | 'Associate';
 
+export type Division =
+  | 'Talent Acquisition'
+  | 'Talent Development'
+  | 'Organizational Development'
+  | 'Employee Benefit'
+  | 'Administration'
+  | 'Graphic Design'
+  | 'Copywriting'
+  | 'Content Coordinator'
+  | 'Video Editor'
+  | 'Public Relation'
+  | 'Social Media Officer'
+  | 'Key Opinion Leader Coordinator'
+  | 'Representative'
+  | 'Program Specialist'
+  | 'Project Representative'
+  | 'Community & Digital Marketing';
+
 export interface User {
   id: string;
   name: string;
@@ -39,14 +57,24 @@ export interface CategoryItem {
   icon: string;
 }
 
+export interface ContentCategoryItem {
+  id: string;
+  name: string;
+  description?: string;
+  contentCount: number;
+}
+
 export interface KnowledgeArticle {
   id: string;
   title: string;
-  category: string;
+  division: string;
+  category?: string;
+  contentCategoryId: string;
+  contentCategoryName?: string;
   summary: string;
   author: string;
   date: string;
-  fileType: 'PDF' | 'DOCX' | 'XLSX' | 'PPTX' | 'E-Book' | 'Video' | 'Artikel' | 'LINK';
+  fileType: 'PDF' | 'DOCX' | 'XLSX' | 'PPTX' | 'LINK';
   views: number;
   downloads?: number;
   downloadUrl?: string;
@@ -59,13 +87,13 @@ export interface KnowledgeArticle {
 export interface HandoverDoc {
   id: string;
   title: string;
-  fileType: 'DOCX' | 'PDF' | 'XLSX' | 'PPTX' | 'LINK';
+  fileType: 'PDF' | 'DOCX' | 'XLSX' | 'PPTX' | 'LINK';
   fileSize: string;
   rotationPeriod: string;
   division: string;
   submitDate: string;
-  author?: string;
-  authorRole?: UserRole;
+  author: string;
+  authorRole: UserRole;
   contentType?: 'file' | 'link';
   linkUrl?: string;
   description?: string;
@@ -105,6 +133,7 @@ export interface ForumTopic {
   content: string;
   tags: string[];
   comments: ForumComment[];
+  created_at?: string;
 }
 
 export interface ActivityLog {
@@ -123,9 +152,9 @@ export interface PendingDoc {
   title: string;
   category: string;
   author: string;
-  subDivision: string;
-  submitDate: string;
-  submitTime: string;
+  subDivision?: string;
+  submitDate?: string;
+  submitTime?: string;
   fileName: string;
   fileSize: string;
   description: string;
@@ -160,3 +189,4 @@ export interface PopularTopic {
   searches: number;
   trend: 'up' | 'down' | 'neutral';
 }
+

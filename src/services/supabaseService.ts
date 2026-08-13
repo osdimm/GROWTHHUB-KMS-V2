@@ -2,6 +2,7 @@ import { supabase } from '../lib/supabase';
 import {
   User,
   CategoryItem,
+  ContentCategoryItem,
   KnowledgeArticle,
   HandoverDoc,
   ForumTopic,
@@ -10,6 +11,8 @@ import {
   PendingDoc,
   AppNotification
 } from '../types';
+import { formatBytes, parseBytes } from '../utils/fileTypeHelper';
+import { formatDateToISO, formatDateToIndonesian } from '../utils/dateUtils';
 
 // ================= SUPABASE STORAGE FILE UPLOAD =================
 export const uploadFileToSupabaseStorage = async (file: File | Blob, customFileName?: string): Promise<string | null> => {
@@ -66,12 +69,12 @@ export const getProfilesFromSupabase = async (): Promise<User[] | null> => {
     email: u.email,
     role: u.role,
     division: u.division || '',
-    status: u.status || 'Aktif',
-    joinDate: u.join_date || '',
+    status: typeof u.status === 'boolean' ? (u.status ? 'Aktif' : 'Nonaktif') : (u.status || 'Aktif'),
+    joinDate: formatDateToIndonesian(u.join_date),
     initials: u.initials || '',
     avatar: u.avatar || undefined,
     password: u.password || undefined,
-    mustChangePassword: u.must_change_password !== undefined ? u.must_change_password : false
+    mustChangePassword: u.must_change_password !== undefined ? Boolean(u.must_change_password) : false
   }));
 };
 
@@ -82,12 +85,12 @@ export const saveProfileToSupabase = async (user: User) => {
     email: user.email,
     role: user.role,
     division: user.division,
-    status: user.status,
-    join_date: user.joinDate,
+    status: user.status === 'Aktif',
+    join_date: formatDateToISO(user.joinDate),
     initials: user.initials,
     avatar: user.avatar,
     password: user.password,
-    must_change_password: user.mustChangePassword
+    must_change_password: user.mustChangePassword || false
   }).select();
 
   if (error) {
@@ -107,7 +110,7 @@ export const deleteProfileFromSupabase = async (id: string) => {
   }
 };
 
-// ================= CATEGORIES =================
+// ================= CATEGORIES (Divisi) =================
 export const getCategoriesFromSupabase = async (): Promise<CategoryItem[] | null> => {
   const { data, error } = await supabase.from('categories').select('*').order('created_at', { ascending: true });
   if (error || !data) return null;
@@ -148,17 +151,60 @@ export const deleteCategoryFromSupabase = async (id: string) => {
   }
 };
 
+// ================= CONTENT CATEGORIES (Kategori Konten Pengetahuan) =================
+export const getContentCategoriesFromSupabase = async (): Promise<ContentCategoryItem[] | null> => {
+  const { data, error } = await supabase.from('content_categories').select('*').order('created_at', { ascending: true });
+  if (error || !data) return null;
+  return data.map((c) => ({
+    id: c.id,
+    name: c.name,
+    description: c.description || '',
+    contentCount: c.content_count || 0
+  }));
+};
+
+export const saveContentCategoryToSupabase = async (cat: ContentCategoryItem) => {
+  const { data, error } = await supabase.from('content_categories').upsert({
+    id: cat.id,
+    name: cat.name,
+    description: cat.description,
+    content_count: cat.contentCount
+  }).select();
+
+  if (error) {
+    console.error('Gagal simpan kategori konten ke Supabase:', error);
+    alert(`❌ GAGAL simpan kategori konten ke database Supabase:\n[Code: ${error.code || 'UNKNOWN'}] ${error.message}`);
+    throw error;
+  }
+  return data;
+};
+
+export const deleteContentCategoryFromSupabase = async (id: string) => {
+  const { error } = await supabase.from('content_categories').delete().eq('id', id);
+  if (error) {
+    console.error('Gagal hapus kategori konten dari Supabase:', error);
+    alert(`❌ GAGAL hapus kategori konten dari database Supabase:\n[Code: ${error.code || 'UNKNOWN'}] ${error.message}`);
+    throw error;
+  }
+};
+
 // ================= KNOWLEDGE ARTICLES =================
 export const getArticlesFromSupabase = async (): Promise<KnowledgeArticle[] | null> => {
+  const { data: catData } = await supabase.from('content_categories').select('*');
+  const catMap = new Map((catData || []).map((c) => [c.id, c.name]));
+
   const { data, error } = await supabase.from('knowledge_articles').select('*').order('created_at', { ascending: false });
   if (error || !data) return null;
   return data.map((a) => ({
     id: a.id,
     title: a.title,
-    category: a.category,
+    division: a.division || a.category || '',
+    category: a.division || a.category || '',
+    contentCategoryId: a.content_category_id || 'cc-002',
+    contentCategoryName: catMap.get(a.content_category_id) || catMap.get('cc-002') || 'Materi Pelatihan',
     summary: a.summary || '',
     author: a.author || '',
-    date: a.date || '',
+    date: formatDateToIndonesian(a.date),
     fileType: a.file_type || 'PDF',
     views: a.views || 0,
     downloads: a.downloads || 0,
@@ -173,10 +219,11 @@ export const saveArticleToSupabase = async (article: KnowledgeArticle) => {
   const fullPayload = {
     id: article.id,
     title: article.title,
-    category: article.category,
+    division: article.division || article.category,
+    content_category_id: article.contentCategoryId || 'cc-002',
     summary: article.summary,
     author: article.author,
-    date: article.date,
+    date: formatDateToISO(article.date),
     file_type: article.fileType,
     views: article.views || 0,
     downloads: article.downloads || 0,
@@ -193,10 +240,11 @@ export const saveArticleToSupabase = async (article: KnowledgeArticle) => {
     const corePayload = {
       id: article.id,
       title: article.title,
-      category: article.category,
+      division: article.division || article.category,
+      content_category_id: article.contentCategoryId || 'cc-002',
       summary: article.summary,
       author: article.author,
-      date: article.date,
+      date: formatDateToISO(article.date),
       file_type: article.fileType,
       views: article.views || 0
     };
@@ -227,13 +275,13 @@ export const getHandoverDocsFromSupabase = async (): Promise<HandoverDoc[] | nul
   return data.map((h) => ({
     id: h.id,
     title: h.title,
-    fileType: h.file_type || 'PDF',
-    fileSize: h.file_size || '1.0 MB',
+    fileType: h.file_type || (h.content_type === 'link' ? 'LINK' : 'PDF'),
+    fileSize: formatBytes(h.file_size),
     rotationPeriod: h.rotation_period || '',
     division: h.division || '',
-    submitDate: h.submit_date || '',
+    submitDate: formatDateToIndonesian(h.submit_date),
     author: h.author || '',
-    authorRole: h.author_role || undefined,
+    authorRole: h.author_role || 'Karyawan',
     description: h.description || '',
     contentType: h.content_type || 'file',
     linkUrl: h.link_url || undefined,
@@ -244,22 +292,21 @@ export const getHandoverDocsFromSupabase = async (): Promise<HandoverDoc[] | nul
 };
 
 export const saveHandoverDocToSupabase = async (doc: HandoverDoc) => {
+  const dbFileType = doc.fileType === 'LINK' ? null : doc.fileType;
   const fullPayload = {
     id: doc.id,
     title: doc.title,
-    file_type: doc.fileType,
-    file_size: doc.fileSize,
+    file_type: dbFileType,
+    file_size: parseBytes(doc.fileSize),
     rotation_period: doc.rotationPeriod,
     division: doc.division,
-    submit_date: doc.submitDate,
+    submit_date: formatDateToISO(doc.submitDate),
     author: doc.author,
-    author_role: doc.authorRole,
+    author_role: doc.authorRole || 'Karyawan',
     description: doc.description,
     content_type: doc.contentType || 'file',
     link_url: doc.linkUrl || null,
-    file_url: doc.fileUrl || null,
-    views: doc.views || 0,
-    downloads: doc.downloads || 0
+    file_url: doc.fileUrl || null
   };
 
   let { data, error } = await supabase.from('handover_docs').upsert(fullPayload).select();
@@ -269,13 +316,13 @@ export const saveHandoverDocToSupabase = async (doc: HandoverDoc) => {
     const corePayload = {
       id: doc.id,
       title: doc.title,
-      file_type: doc.fileType,
-      file_size: doc.fileSize,
+      file_type: dbFileType,
+      file_size: parseBytes(doc.fileSize),
       rotation_period: doc.rotationPeriod,
       division: doc.division,
-      submit_date: doc.submitDate,
+      submit_date: formatDateToISO(doc.submitDate),
       author: doc.author,
-      author_role: doc.authorRole,
+      author_role: doc.authorRole || 'Karyawan',
       description: doc.description
     };
     const retry = await supabase.from('handover_docs').upsert(corePayload).select();
@@ -302,32 +349,43 @@ export const deleteHandoverDocFromSupabase = async (id: string) => {
 export const getForumTopicsFromSupabase = async (): Promise<ForumTopic[] | null> => {
   const { data, error } = await supabase.from('forum_topics').select('*, forum_comments(*)').order('created_at', { ascending: false });
   if (error || !data) return null;
-  return data.map((t) => ({
-    id: t.id,
-    title: t.title,
-    category: t.category,
-    author: t.author,
-    authorRole: t.author_role || 'Pengguna',
-    authorAvatar: t.author_avatar || undefined,
-    authorInitials: t.author_initials || '',
-    date: t.date || '',
-    time: t.time || '',
-    views: t.views || 0,
-    commentCount: (t.forum_comments && t.forum_comments.length) || t.comment_count || 0,
-    content: t.content || '',
-    tags: t.tags || [],
-    comments: (t.forum_comments || []).map((c: any) => ({
-      id: c.id,
-      author: c.author,
-      authorRole: c.author_role || '',
-      avatar: c.avatar || undefined,
-      initials: c.initials || '',
-      content: c.content,
-      timestamp: c.timestamp || '',
-      isPinned: c.is_pinned || false,
-      parentId: c.parent_id || null
-    }))
-  }));
+  return data.map((t) => {
+    const createdDate = t.created_at ? new Date(t.created_at) : new Date();
+    const formattedDate = createdDate.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+    const formattedTime = createdDate.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB';
+
+    return {
+      id: t.id,
+      title: t.title,
+      category: t.category,
+      author: t.author,
+      authorRole: t.author_role || 'Karyawan',
+      authorAvatar: t.author_avatar || undefined,
+      authorInitials: t.author_initials || '',
+      date: formattedDate,
+      time: formattedTime,
+      views: t.views || 0,
+      commentCount: (t.forum_comments && t.forum_comments.length) || t.comment_count || 0,
+      content: t.content || '',
+      tags: t.tags || [],
+      created_at: t.created_at,
+      comments: (t.forum_comments || []).map((c: any) => {
+        const commentDate = c.created_at ? new Date(c.created_at) : new Date();
+        return {
+          id: c.id,
+          author: c.author,
+          authorRole: c.author_role || '',
+          avatar: c.avatar || undefined,
+          initials: c.initials || '',
+          content: c.content,
+          timestamp: commentDate.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+          isPinned: c.is_pinned || false,
+          parentId: c.parent_id || null,
+          likes: c.likes || 0
+        };
+      })
+    };
+  });
 };
 
 export const saveForumTopicToSupabase = async (topic: ForumTopic) => {
@@ -339,8 +397,6 @@ export const saveForumTopicToSupabase = async (topic: ForumTopic) => {
     author_role: topic.authorRole,
     author_avatar: topic.authorAvatar,
     author_initials: topic.authorInitials,
-    date: topic.date,
-    time: topic.time,
     views: topic.views,
     comment_count: topic.commentCount,
     content: topic.content,
@@ -364,7 +420,7 @@ export const saveForumCommentToSupabase = async (topicId: string, comment: Forum
     avatar: comment.avatar,
     initials: comment.initials,
     content: comment.content,
-    timestamp: comment.timestamp,
+    likes: comment.likes || 0,
     is_pinned: comment.isPinned || false,
     parent_id: comment.parentId || null
   };
@@ -380,8 +436,7 @@ export const saveForumCommentToSupabase = async (topicId: string, comment: Forum
       author_role: comment.authorRole,
       avatar: comment.avatar,
       initials: comment.initials,
-      content: comment.content,
-      timestamp: comment.timestamp
+      content: comment.content
     };
     const retry = await supabase.from('forum_comments').upsert(fallbackPayload).select();
     if (retry.error) {
@@ -416,22 +471,25 @@ export const deleteForumCommentFromSupabase = async (commentId: string) => {
 export const getPendingDocsFromSupabase = async (): Promise<PendingDoc[] | null> => {
   const { data, error } = await supabase.from('pending_docs').select('*').order('created_at', { ascending: false });
   if (error || !data) return null;
-  return data.map((p) => ({
-    id: p.id,
-    title: p.title,
-    category: p.category,
-    author: p.author,
-    subDivision: p.sub_division || '',
-    submitDate: p.submit_date || '',
-    submitTime: p.submit_time || '',
-    fileName: p.file_name || '',
-    fileSize: p.file_size || '',
-    description: p.description || '',
-    tags: p.tags || [],
-    status: p.status || 'Menunggu Verifikasi',
-    note: p.note || undefined,
-    fileUrl: p.file_url || undefined
-  }));
+  return data.map((p) => {
+    const createdDate = p.created_at ? new Date(p.created_at) : new Date();
+    return {
+      id: p.id,
+      title: p.title,
+      category: p.category,
+      author: p.author,
+      subDivision: p.category,
+      submitDate: createdDate.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }),
+      submitTime: createdDate.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+      fileName: p.file_name || '',
+      fileSize: formatBytes(p.file_size),
+      description: p.description || '',
+      tags: p.tags || [],
+      status: p.status || 'Menunggu Verifikasi',
+      note: p.note || undefined,
+      fileUrl: p.file_url || undefined
+    };
+  });
 };
 
 export const savePendingDocToSupabase = async (doc: PendingDoc) => {
@@ -440,11 +498,8 @@ export const savePendingDocToSupabase = async (doc: PendingDoc) => {
     title: doc.title,
     category: doc.category,
     author: doc.author,
-    sub_division: doc.subDivision,
-    submit_date: doc.submitDate,
-    submit_time: doc.submitTime,
     file_name: doc.fileName,
-    file_size: doc.fileSize,
+    file_size: parseBytes(doc.fileSize),
     description: doc.description,
     tags: doc.tags,
     status: doc.status,
@@ -466,7 +521,7 @@ export const getActivitiesFromSupabase = async (): Promise<ActivityLog[] | null>
   if (error || !data) return null;
   return data.map((a) => ({
     id: a.id,
-    user: a.user_name,
+    user: a.user_name || a.user || '',
     userInitials: a.user_initials || '',
     userAvatar: a.user_avatar || undefined,
     department: a.department || '',
@@ -514,7 +569,7 @@ export const getNotificationsFromSupabase = async (): Promise<AppNotification[] 
     title: n.title,
     desc: n.description,
     time: n.time || 'Baru saja',
-    createdAt: n.created_at,
+    createdAt: typeof n.created_at === 'string' ? new Date(n.created_at).getTime() : n.created_at,
     author: n.author || '',
     targetUserId: n.target_user_id || undefined,
     targetUserName: n.target_user_name || undefined,
@@ -522,25 +577,29 @@ export const getNotificationsFromSupabase = async (): Promise<AppNotification[] 
     targetRoles: n.target_roles || undefined,
     excludeUploaderName: n.exclude_uploader_name || undefined,
     type: n.type || 'info',
-    read: n.read || false
+    read: Boolean(n.read)
   }));
 };
 
 export const saveNotificationToSupabase = async (notif: AppNotification) => {
+  const createdAtIso = notif.createdAt
+    ? new Date(notif.createdAt).toISOString()
+    : new Date().toISOString();
+
   const { data, error } = await supabase.from('notifications').upsert({
     id: notif.id,
     title: notif.title,
     description: notif.desc,
     time: notif.time,
-    created_at: notif.createdAt || Date.now(),
-    author: notif.author,
+    created_at: createdAtIso,
+    author: notif.author || 'System',
     target_user_id: notif.targetUserId || null,
     target_user_name: notif.targetUserName || null,
     target_division: notif.targetDivision || null,
     target_roles: notif.targetRoles || null,
     exclude_uploader_name: notif.excludeUploaderName || null,
-    type: notif.type,
-    read: notif.read || false
+    type: notif.type || 'info',
+    read: Boolean(notif.read)
   }).select();
 
   if (error) {

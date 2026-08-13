@@ -31,7 +31,41 @@ Setiap fitur di bawah ini dilengkapi dengan minimal **1 Kasus Positif** (input v
 | **TC-BB-FOR-003** | Forum Diskusi | Kirim Komentar Top-Level (Positif) | 1. Buka salah satu topik forum<br>2. Ketik komentar di kolom bawah<br>3. Klik Kirim / Tekan `Enter` | Komentar: `Terima kasih SOP sangat jelas.` | Komentar muncul di bagian bawah daftar komentar top-level. | | |
 | **TC-BB-FOR-004** | Forum Diskusi | Kirim Komentar Kosong (Negatif) | 1. Buka topik forum<br>2. Biarkan kolom komentar kosong<br>3. Tekan `Enter` | Komentar: ` ` (spasi saja) | Tombol kirim tidak aktif atau sistem memblokir pengiriman komentar kosong. | | |
 | **TC-BB-FOR-005** | Forum Diskusi | Balas Komentar Nested (Reply Level 1 & 2+) | 1. Klik tombol "Balas" pada komentar orang lain<br>2. Ketik balasan<br>3. Kirim balasan | Balasan: `@Ananda Reva Saya setuju` | Komentar balasan terindikasi indented (masuk ke dalam) di bawah komentar utama dengan tag mention yang jelas. | | |
-| **TC-BB-FOR-006** | Forum Diskusi | Autocomplete & Highlight `@mention` | 1. Ketik `@` di kolom balasan<br>2. Pilih nama dari dropdown autocomplete<br>3. Kirim balasan | Text: `@Andi Darmawan mohon dicek` | Teks `@Andi Darmawan` otomatis diberi highlight warna khusus (badge neon/blue) pada hasil terbitan. | | |
+| **TC-BB-FOR-006** | Forum Diskusi | Autocomplete & Highlight `@mention` | 1. Ketik `@` di kolom balasanUbah aturan visibilitas dokumen Handover Rotasi: yang menentukan siapa boleh melihat sebuah dokumen adalah ROLE dari uploader-nya, BUKAN divisi. Jika dokumen di-upload oleh seorang Manajer, HANYA user dengan role Manajer (dari divisi manapun) yang boleh melihat dokumen tersebut. Anggota biasa (Karyawan/Associate) di divisi yang sama dengan uploader TIDAK BOLEH melihat dokumen ini, meskipun mereka satu divisi.
+
+Kolom baru "author_role" TEXT sudah ditambahkan ke tabel handover_docs di Supabase untuk menyimpan role uploader saat dokumen diunggah.
+
+Lakukan perubahan berikut:
+
+## 1. Simpan role uploader saat upload
+
+Di handler handleAddHandover (App.tsx), pastikan objek HandoverDoc yang dibuat menyertakan field authorRole, diisi dari currentUser.role saat itu (role uploader pada saat upload, bukan role yang bisa berubah nanti).
+
+Update juga type HandoverDoc di types.ts untuk menambahkan field: authorRole: string.
+
+Update saveHandoverDocToSupabase dan getHandoverDocsFromSupabase di services/supabaseService.ts untuk mapping field authorRole <-> author_role, mengikuti pola mapping camelCase <-> snake_case yang sudah dipakai untuk field lain di file yang sama.
+
+## 2. Filter dokumen yang ditampilkan berdasarkan role, bukan divisi
+
+Di komponen yang menampilkan list Handover Rotasi (HandoverRotasiView), filter dokumen yang ditampilkan ke currentUser SESUAI aturan: currentUser HANYA bisa melihat dokumen yang authorRole-nya SAMA PERSIS dengan currentUser.role (contoh: user dengan role "Manajer" hanya melihat dokumen dengan authorRole "Manajer", TIDAK PEDULI divisi dokumen tersebut berasal dari divisi mana).
+
+PENGECUALIAN: role "Admin" tetap bisa melihat SEMUA dokumen handover dari role manapun (karena admin butuh visibilitas penuh untuk keperluan pengawasan sistem) — KECUALI jika saya bilang sebaliknya nanti.
+
+Terapkan filter ini di level rendering data (sebelum data ditampilkan ke UI), bukan hanya menyembunyikan lewat CSS.
+
+## 3. Update filter divisi yang sudah ada (jika ada)
+
+Cek apakah HandoverRotasiView sebelumnya juga punya filter berdasarkan divisi (dropdown "Semua Divisi" dsb seperti di Forum Diskusi) — jika ada, filter divisi ini TETAP BOLEH ada sebagai filter TAMBAHAN untuk pencarian/browsing (misal Manajer ingin cari handover dari divisi tertentu), tapi filter ROLE (langkah 2) tetap jadi aturan UTAMA yang membatasi visibilitas dasar terlebih dahulu.
+
+## 4. Pesan untuk user yang tidak berwenang
+
+Jika Karyawan/Associate membuka halaman Handover Rotasi dan tidak ada dokumen yang authorRole-nya cocok dengan role mereka (karena semua handover di-upload oleh Manajer), tampilkan pesan yang jelas seperti "Belum ada dokumen handover yang tersedia untuk role Anda" — BUKAN pesan error atau halaman kosong tanpa penjelasan.
+
+## KONFIRMASI
+
+Setelah diterapkan, tunjukkan kode akhir bagian filter di HandoverRotasiView, dan konfirmasi skenario berikut sudah benar:
+- Manajer Divisi A upload handover → Manajer Divisi B BISA melihat, Karyawan Divisi A TIDAK BISA melihat.
+- Karyawan (jika bisa upload handover) upload handover → hanya sesama Karyawan yang bisa melihat, Manajer TIDAK BISA melihat (kecuali requirement ini perlu saya konfirmasi ulang — beri tahu saya jika ada ambiguitas soal role Karyawan mengupload handover).<br>2. Pilih nama dari dropdown autocomplete<br>3. Kirim balasan | Text: `@Andi Darmawan mohon dicek` | Teks `@Andi Darmawan` otomatis diberi highlight warna khusus (badge neon/blue) pada hasil terbitan. | | |
 | **TC-BB-FOR-007** | Forum Diskusi | Kirim Pesan: `Enter` vs `Shift+Enter` | 1. Ketik baris 1, tekan `Shift+Enter`<br>2. Ketik baris 2, tekan `Enter` | Baris 1<br>Baris 2 | `Shift+Enter` menambah baris baru tanpa mengirim, sedangkan `Enter` mengirimkan seluruh pesan yang sudah berbaris ganda. | | |
 | **TC-BB-FOR-008** | Forum Diskusi | Like & Unlike Komentar | 1. Klik ikon Jempol/Like pada komentar<br>2. Klik sekali lagi untuk Unlike | Klik Like | Jumlah like bertambah +1 saat di-like, dan berkurang -1 saat di-unlike. | | |
 | **TC-BB-FOR-009** | Forum Diskusi | Pin / Unpin Komentar (Positif - Role Manajer/Admin) | 1. Login sebagai Manajer/Admin<br>2. Klik tombol "Pin Komentar" | Klik Pin | Komentar berpindah ke urutan paling atas dengan indikator badge `📌 Sematan Utama`. | | |
@@ -40,7 +74,7 @@ Setiap fitur di bawah ini dilengkapi dengan minimal **1 Kasus Positif** (input v
 | **TC-BB-FOR-012** | Forum Diskusi | Hapus Topik Forum (Khusus Admin) | 1. Login sebagai Admin<br>2. Klik ikon Hapus Topik di pojok topik<br>3. Konfirmasi Hapus | Admin Dandi | Topik beserta seluruh balasan didalamnya terhapus permanen dari sistem. | | |
 | **TC-BB-FOR-013** | Forum Diskusi | Realtime Sync Cross-Device (Multi Window) | 1. Buka Window 1 & Window 2 di topik sama<br>2. Kirim balasan dari Window 1 | Pesan: `Realtime Test` | Komentar baru di Window 1 otomatis muncul di Window 2 tanpa perlu melakukan reload halaman. | | |
 | **TC-BB-VER-001** | Verifikasi & Notifikasi | Upload Dokumen Karyawan Divisi A $\rightarrow$ Notifikasi Manajer Divisi A | 1. Karyawan A (Graphic Design) upload dokumen baru<br>2. Periksa lonceng notifikasi Manajer Divisi A & Divisi B | Uploader: `Karyawan A` (Graphic Design) | HANYA Manajer Divisi Graphic Design yang menerima notifikasi *"Pengajuan Verifikasi Konten Baru"*. Manajer/User divisi B tidak menerima. | | |
-| **TC-BB-VER-002** | Verifikasi & Notifikasi | Approval Dokumen oleh Manajer (Company-Wide KB Notice) | 1. Manajer Graphic Design klik **Approve** dengan catatan<br>2. Cek notifikasi Uploader & SELURUH User aplikasi | Approve Note: `Sudah baik` | Uploader menerima notifikasi personal *"✅ Pengajuan Dokumen Disetujui"*, sedangkan SELURUH USER LAIN di semua divisi (selain uploader) mendapat notifikasi *"📚 Dokumen Baru di Knowledge Base"*. | | |
+| **TC-BB-VER-002** | Verifikasi & Notifikasi | Approval Dokumen oleh Manajer | 1. Manajer Graphic Design klik **Approve** dengan catatan<br>2. Cek notifikasi Uploader & Anggota Divisi lain | Approve Note: `Sudah baik` | Uploader menerima notifikasi *"✅ Pengajuan Disetujui"*, sedangkan seluruh anggota divisi (selain uploader) mendapat notifikasi *"📚 Dokumen Baru"*. | | |
 | **TC-BB-VER-003** | Verifikasi & Notifikasi | Rejection Dokumen oleh Manajer | 1. Manajer Graphic Design klik **Reject** dengan alasan<br>2. Cek notifikasi di seluruh akun | Reject Note: `Format kurang sesuai` | HANYA Uploader yang menerima notifikasi *"❌ Pengajuan Ditolak"*. Anggota lain & Admin luar divisi TIDAK menerima notifikasi apapun. | | |
 | **TC-BB-VER-004** | Verifikasi & Notifikasi | Notifikasi Luar Divisi (Negatif Test - Strict Boundary) | 1. Uploader Divisi Graphic Design ajukan dokumen<br>2. Cek akun User & Admin di Divisi Talent Development | User Divisi B & Admin | Pengguna di luar divisi terkait mendapatkan 0 notifikasi (tidak terjadi kebocoran data antar-divisi). | | |
 | **TC-BB-VER-005** | Verifikasi & Notifikasi | Waktu Relatif Notifikasi Dinamis (`getRelativeTime`) | 1. Amati notifikasi baru (0-59 detik)<br>2. Biarkan panel notifikasi terbuka selama 30 detik | Timestamp | Notifikasi pertama kali menampilkan *"Baru saja"*, lalu berubah menjadi *"1 menit yang lalu"* secara otomatis. | | |

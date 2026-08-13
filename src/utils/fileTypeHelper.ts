@@ -1,13 +1,50 @@
-export function autoDetectFileType(fileName?: string): 'PDF' | 'DOCX' | 'XLSX' | 'PPTX' | 'E-Book' | 'Video' | 'Artikel' | 'LINK' {
-  if (!fileName) return 'Artikel';
+export function autoDetectFileType(fileName?: string): 'PDF' | 'DOCX' | 'XLSX' | 'PPTX' | 'LINK' {
+  if (!fileName) return 'PDF';
   const ext = fileName.split('.').pop()?.toLowerCase();
   if (ext === 'pdf') return 'PDF';
   if (['docx', 'doc'].includes(ext || '')) return 'DOCX';
   if (['xlsx', 'xls', 'csv'].includes(ext || '')) return 'XLSX';
   if (['pptx', 'ppt'].includes(ext || '')) return 'PPTX';
-  if (['epub', 'mobi'].includes(ext || '')) return 'E-Book';
-  if (['mp4', 'mov', 'avi', 'mkv'].includes(ext || '')) return 'Video';
-  return 'Artikel';
+  return 'PDF';
+}
+
+export function formatBytes(bytes?: number | string | null): string {
+  if (bytes === null || bytes === undefined || bytes === '') return '1.0 MB';
+  if (typeof bytes === 'string') {
+    if (bytes.includes('KB') || bytes.includes('MB') || bytes.includes('GB') || bytes.includes('B') || bytes.includes('Tautan')) {
+      return bytes;
+    }
+    const num = Number(bytes);
+    if (isNaN(num)) return bytes;
+    bytes = num;
+  }
+  if (bytes <= 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
+export function parseBytes(sizeStr?: string | number | null): number | null {
+  if (sizeStr === null || sizeStr === undefined || sizeStr === '') return null;
+  if (typeof sizeStr === 'number') return Math.round(sizeStr);
+  const str = String(sizeStr).trim();
+  if (str.toLowerCase().includes('tautan') || str.toUpperCase() === 'LINK') return null;
+  const upper = str.toUpperCase();
+  if (upper.includes('MB')) {
+    const num = parseFloat(upper.replace(/[^0-9.]/g, ''));
+    return isNaN(num) ? null : Math.round(num * 1024 * 1024);
+  }
+  if (upper.includes('KB')) {
+    const num = parseFloat(upper.replace(/[^0-9.]/g, ''));
+    return isNaN(num) ? null : Math.round(num * 1024);
+  }
+  if (upper.includes('GB')) {
+    const num = parseFloat(upper.replace(/[^0-9.]/g, ''));
+    return isNaN(num) ? null : Math.round(num * 1024 * 1024 * 1024);
+  }
+  const num = parseFloat(str.replace(/[^0-9.]/g, ''));
+  return isNaN(num) ? null : Math.round(num);
 }
 
 export function isLinkDocument(doc: { fileType?: string; contentType?: string; fileUrl?: string; linkUrl?: string }): boolean {

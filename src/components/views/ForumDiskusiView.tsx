@@ -290,6 +290,25 @@ const CommentNodeItem: React.FC<CommentNodeItemProps> = ({
   );
 };
 
+export const ALL_DIVISIONS = [
+  'Talent Acquisition',
+  'Talent Development',
+  'Organizational Development',
+  'Employee Benefit',
+  'Administration',
+  'Graphic Design',
+  'Copywriting',
+  'Content Coordinator',
+  'Video Editor',
+  'Public Relation',
+  'Social Media Officer',
+  'Key Opinion Leader Coordinator',
+  'Representative',
+  'Program Specialist',
+  'Project Representative',
+  'Community & Digital Marketing'
+];
+
 export const ForumDiskusiView: React.FC<ForumDiskusiViewProps> = ({
   topics,
   categories,
@@ -342,30 +361,7 @@ export const ForumDiskusiView: React.FC<ForumDiskusiViewProps> = ({
     }
   }, [targetHighlightCommentId, selectedTopicId]);
 
-  const divisionsList = Array.from(
-    new Set(
-      categories && categories.length > 0
-        ? categories.map((c) => c.name)
-        : [
-            'Talent Acquisition',
-            'Talent Development',
-            'Organizational Development',
-            'Employee Benefit',
-            'Administration',
-            'Graphic Design',
-            'Copywriting',
-            'Content Coordinator',
-            'Video Editor',
-            'Public Relation',
-            'Social Media Officer',
-            'Key Opinion Leader Coordinator',
-            'Representative',
-            'Program Specialist',
-            'Project Representative',
-            'Community & Digital Marketing'
-          ]
-    )
-  );
+  const divisionsList = ALL_DIVISIONS;
 
   const [showNewTopicModal, setShowNewTopicModal] = useState(false);
   const [newTopicTitle, setNewTopicTitle] = useState('');

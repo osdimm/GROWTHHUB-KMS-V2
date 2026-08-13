@@ -98,6 +98,11 @@ export const Header: React.FC<HeaderProps> = ({
     };
   }, []);
 
+  const showSearchBar =
+    activeTab !== 'dashboard' &&
+    activeTab !== 'laporan-penggunaan' &&
+    activeTab !== 'profil-pengguna';
+
   return (
     <header className="fixed top-0 right-0 left-0 lg:left-[280px] h-[64px] bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 z-40 flex items-center justify-between px-4 lg:px-8">
       {/* Left Container: Search Bar + Mepet Theme Easter Egg */}
@@ -110,19 +115,21 @@ export const Header: React.FC<HeaderProps> = ({
           <span className="material-symbols-outlined">menu</span>
         </button>
 
-        {/* 1. Search Bar (Paling Kiri) */}
-        <div className="relative flex-1">
-          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 text-[20px]">
-            search
-          </span>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={getSearchPlaceholder()}
-            className="w-full pl-10 pr-4 py-2 bg-slate-100/80 dark:bg-slate-800/80 border border-transparent dark:border-slate-700 rounded-full text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:border-[#006194] dark:focus:border-cyan-400 focus:ring-2 focus:ring-[#006194]/10 transition-all"
-          />
-        </div>
+        {/* 1. Search Bar (Hanya tampil pada tab yang membutuhkan pencarian) */}
+        {showSearchBar && (
+          <div className="relative flex-1">
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 text-[20px]">
+              search
+            </span>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={getSearchPlaceholder()}
+              className="w-full pl-10 pr-4 py-2 bg-slate-100/80 dark:bg-slate-800/80 border border-transparent dark:border-slate-700 rounded-full text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:border-[#006194] dark:focus:border-cyan-400 focus:ring-2 focus:ring-[#006194]/10 transition-all"
+            />
+          </div>
+        )}
 
         {/* 2. Tombol Toggle Tema (Easter Egg Tersembunyi - MEPET/menempel di ujung kanan search bar) */}
         <div className="relative flex items-center shrink-0 ml-1 sm:ml-1.5" ref={themeRef}>

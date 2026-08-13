@@ -8,6 +8,8 @@ import {
   initialActivities,
   initialPendingDocs
 } from '../data/mockData';
+import { parseBytes } from './fileTypeHelper';
+import { formatDateToISO } from './dateUtils';
 
 export const seedSupabaseData = async () => {
   console.log('🚀 Starting Supabase Data Seeding...');
@@ -36,9 +38,11 @@ export const seedSupabaseData = async () => {
         email: u.email,
         role: u.role,
         division: u.division,
-        status: u.status,
-        join_date: u.joinDate,
-        initials: u.initials
+        status: u.status === 'Aktif',
+        join_date: formatDateToISO(u.joinDate),
+        initials: u.initials,
+        password: u.password || 'password123',
+        must_change_password: u.mustChangePassword || false
       }))
     );
     if (userErr) console.error('Error seeding profiles:', userErr.message);
@@ -52,9 +56,10 @@ export const seedSupabaseData = async () => {
         category: a.category,
         summary: a.summary,
         author: a.author,
-        date: a.date,
-        file_type: a.fileType,
-        views: a.views
+        date: formatDateToISO(a.date),
+        file_type: a.fileType === 'LINK' ? 'LINK' : (a.fileType || 'PDF'),
+        views: a.views || 0,
+        content_type: a.contentType || 'file'
       }))
     );
     if (artErr) console.error('Error seeding articles:', artErr.message);
@@ -65,13 +70,15 @@ export const seedSupabaseData = async () => {
       initialHandoverDocs.map(h => ({
         id: h.id,
         title: h.title,
-        file_type: h.fileType,
-        file_size: h.fileSize,
+        file_type: h.fileType === 'LINK' ? null : h.fileType,
+        file_size: parseBytes(h.fileSize),
         rotation_period: h.rotationPeriod,
         division: h.division,
-        submit_date: h.submitDate,
-        author: h.author,
-        description: h.description
+        submit_date: formatDateToISO(h.submitDate),
+        author: h.author || 'Karyawan',
+        author_role: h.authorRole || 'Karyawan',
+        description: h.description,
+        content_type: h.contentType || 'file'
       }))
     );
     if (hoErr) console.error('Error seeding handover docs:', hoErr.message);
@@ -86,8 +93,6 @@ export const seedSupabaseData = async () => {
         author: f.author,
         author_role: f.authorRole,
         author_initials: f.authorInitials,
-        date: f.date,
-        time: f.time,
         views: f.views,
         comment_count: f.commentCount,
         content: f.content,
@@ -104,11 +109,8 @@ export const seedSupabaseData = async () => {
         title: p.title,
         category: p.category,
         author: p.author,
-        sub_division: p.subDivision,
-        submit_date: p.submitDate,
-        submit_time: p.submitTime,
         file_name: p.fileName,
-        file_size: p.fileSize,
+        file_size: parseBytes(p.fileSize),
         description: p.description,
         tags: p.tags,
         status: p.status
@@ -136,3 +138,4 @@ export const seedSupabaseData = async () => {
     console.error('❌ Seeding failed:', err);
   }
 };
+

@@ -1,6 +1,7 @@
 import {
   User,
   CategoryItem,
+  ContentCategoryItem,
   KnowledgeArticle,
   HandoverDoc,
   ForumTopic,
@@ -165,11 +166,20 @@ export const initialCategories: CategoryItem[] = [
   { id: 'cat-16', code: '16', name: 'Community & Digital Marketing', description: 'Pemasaran digital, manajemen komunitas, dan kampanye iklan online.', contentCount: 124, icon: 'ads_click' }
 ];
 
+export const initialContentCategories: ContentCategoryItem[] = [
+  { id: 'cc-001', name: 'SOP & Panduan Kerja', description: 'Standard Operating Procedure dan alur kerja.', contentCount: 3 },
+  { id: 'cc-002', name: 'Materi Pelatihan', description: 'Silabus, modul pembinaan, dan bahan ajar.', contentCount: 2 },
+  { id: 'cc-003', name: 'Best Practices & Studi Kasus', description: 'Pengalaman lapangan dan studi kasus.', contentCount: 1 }
+];
+
 export const initialArticles: KnowledgeArticle[] = [
   {
     id: 'kb-1',
     title: 'Panduan Produksi Konten Viral v2.1',
+    division: 'Social Media Officer',
     category: 'Social Media Officer',
+    contentCategoryId: 'cc-001',
+    contentCategoryName: 'SOP & Panduan Kerja',
     summary: 'Standar operasional prosedur untuk pembuatan konten video pendek di platform TikTok & Reels.',
     author: 'Siti Maryam',
     date: '12 Okt 2023',
@@ -179,7 +189,10 @@ export const initialArticles: KnowledgeArticle[] = [
   {
     id: 'kb-2',
     title: 'Growth Hub Brand Guidelines 2026',
+    division: 'Graphic Design',
     category: 'Graphic Design',
+    contentCategoryId: 'cc-001',
+    contentCategoryName: 'SOP & Panduan Kerja',
     summary: 'Pedoman visual resmi termasuk palet warna, tipografi, dan aset tata letak.',
     author: 'Ahmad Sulistyo',
     date: '05 Jan 2026',
@@ -189,7 +202,10 @@ export const initialArticles: KnowledgeArticle[] = [
   {
     id: 'kb-3',
     title: 'Kebijakan Karir Content Creator',
+    division: 'Talent Development',
     category: 'Talent Development',
+    contentCategoryId: 'cc-002',
+    contentCategoryName: 'Materi Pelatihan',
     summary: 'Dokumen rincian jenjang karir, KPI mingguan, dan evaluasi performa.',
     author: 'Andi Darmawan',
     date: '28 Des 2023',
@@ -199,31 +215,40 @@ export const initialArticles: KnowledgeArticle[] = [
   {
     id: 'kb-4',
     title: 'Etika Berkomunikasi di Media Sosial',
+    division: 'Public Relation',
     category: 'Public Relation',
+    contentCategoryId: 'cc-003',
+    contentCategoryName: 'Best Practices & Studi Kasus',
     summary: 'Protokol komunikasi eksternal dan manajemen krisis saat menghadapi keluhan publik.',
     author: 'Rina Amelia',
     date: '15 Feb 2026',
-    fileType: 'Artikel',
+    fileType: 'PDF',
     views: 1890
   },
   {
     id: 'kb-5',
     title: 'Template Laporan Progres Konten',
+    division: 'Administration',
     category: 'Administration',
+    contentCategoryId: 'cc-001',
+    contentCategoryName: 'SOP & Panduan Kerja',
     summary: 'Format standar administrasi untuk pelaporan data analitik konten setiap bulan.',
     author: 'Budi Pratama',
     date: '02 Mar 2026',
-    fileType: 'E-Book',
+    fileType: 'DOCX',
     views: 2450
   },
   {
     id: 'kb-6',
     title: 'Visi Produk & Roadmap Kreatif 2026',
+    division: 'Program Specialist',
     category: 'Program Specialist',
+    contentCategoryId: 'cc-002',
+    contentCategoryName: 'Materi Pelatihan',
     summary: 'Rencana jangka panjang Chief Product Officer untuk otomatisasi alur kerja media.',
     author: 'Andi Nugraha',
     date: '10 Jan 2026',
-    fileType: 'Video',
+    fileType: 'PPTX',
     views: 1560
   }
 ];
@@ -238,6 +263,7 @@ export const initialHandoverDocs: HandoverDoc[] = [
     division: 'Talent Development',
     submitDate: '12 Des 2025',
     author: 'Budi Setiawan',
+    authorRole: 'Manajer',
     description: 'Catatan serah terima daftar vendor pelatihan, perjanjian kerja sama (MOU), serta histori tagihan aktif.'
   },
   {
@@ -249,6 +275,7 @@ export const initialHandoverDocs: HandoverDoc[] = [
     division: 'Organizational Development',
     submitDate: '28 Sep 2025',
     author: 'Sarah Jenkins',
+    authorRole: 'Manajer',
     description: 'Ringkasan panduan evaluasi efektivitas struktur tim dan standar operasional penilaian kerja kuartal 3.'
   },
   {
@@ -260,6 +287,7 @@ export const initialHandoverDocs: HandoverDoc[] = [
     division: 'Public Relation',
     submitDate: '05 Jan 2025',
     author: 'Rina Pratama',
+    authorRole: 'Karyawan',
     description: 'Daftar kontak eksternal partner media, perwakilan instansi, serta catatan hubungan pers aktif.'
   },
   {
@@ -271,6 +299,7 @@ export const initialHandoverDocs: HandoverDoc[] = [
     division: 'Employee Benefit',
     submitDate: '15 Jun 2025',
     author: 'David Chen',
+    authorRole: 'Karyawan',
     description: 'Hasil audit klaim asuransi kesehatan karyawan dan rekomendasi penyesuaian fasilitas kebugaran.'
   },
   {
@@ -281,7 +310,8 @@ export const initialHandoverDocs: HandoverDoc[] = [
     rotationPeriod: 'Q4 2025',
     division: 'Community & Digital Marketing',
     submitDate: '20 Des 2025',
-    author: 'Anita Wijaya'
+    author: 'Anita Wijaya',
+    authorRole: 'Manajer'
   },
   {
     id: 'ho-6',
@@ -291,7 +321,8 @@ export const initialHandoverDocs: HandoverDoc[] = [
     rotationPeriod: 'Q3 2025',
     division: 'Administration',
     submitDate: '05 Okt 2025',
-    author: 'Budi Pratama'
+    author: 'Budi Pratama',
+    authorRole: 'Karyawan'
   },
   {
     id: 'ho-7',
@@ -301,7 +332,8 @@ export const initialHandoverDocs: HandoverDoc[] = [
     rotationPeriod: 'Q1 2025',
     division: 'Talent Acquisition',
     submitDate: '12 Jan 2025',
-    author: 'Johnathan Doe'
+    author: 'Johnathan Doe',
+    authorRole: 'Manajer'
   },
   {
     id: 'ho-8',
@@ -311,7 +343,8 @@ export const initialHandoverDocs: HandoverDoc[] = [
     rotationPeriod: 'Q4 2025',
     division: 'Project Representative',
     submitDate: '28 Des 2025',
-    author: 'Mike Kim'
+    author: 'Mike Kim',
+    authorRole: 'Karyawan'
   },
   {
     id: 'ho-9',
@@ -321,7 +354,8 @@ export const initialHandoverDocs: HandoverDoc[] = [
     rotationPeriod: 'Q1 2025',
     division: 'Program Specialist',
     submitDate: '02 Feb 2025',
-    author: 'Alex Linden'
+    author: 'Alex Linden',
+    authorRole: 'Karyawan'
   },
   {
     id: 'ho-10',
@@ -331,7 +365,8 @@ export const initialHandoverDocs: HandoverDoc[] = [
     rotationPeriod: 'Q3 2025',
     division: 'Content Coordinator',
     submitDate: '18 Sep 2025',
-    author: 'Sarah Chen'
+    author: 'Sarah Chen',
+    authorRole: 'Karyawan'
   }
 ];
 
@@ -515,7 +550,10 @@ export const initialPendingDocs: PendingDoc[] = [
     articleData: {
       id: 'kb-approved-pv-1',
       title: 'Strategi Wawancara Kerja & Seleksi Talent Q3',
+      division: 'Talent Acquisition',
       category: 'Talent Acquisition',
+      contentCategoryId: 'cc-002',
+      contentCategoryName: 'Materi Pelatihan',
       summary: 'Panduan mendalam mengenai metode evaluasi kandidat dan standar wawancara rekrutmen terbaru.',
       author: 'Ananda Reva',
       date: '28 Jul 2026',
@@ -540,7 +578,10 @@ export const initialPendingDocs: PendingDoc[] = [
     articleData: {
       id: 'kb-approved-pv-2',
       title: 'Modul Pelatihan Kepemimpinan & Perencanaan Karir',
+      division: 'Talent Development',
       category: 'Talent Development',
+      contentCategoryId: 'cc-002',
+      contentCategoryName: 'Materi Pelatihan',
       summary: 'Silabus komprehensif mengenai program pembinaan talenta internal dan indikator jenjang karir.',
       author: 'Dandi Pangestu',
       date: '28 Jul 2026',
@@ -565,7 +606,10 @@ export const initialPendingDocs: PendingDoc[] = [
     articleData: {
       id: 'kb-approved-pv-3',
       title: 'SOP Penyuntingan Video Shorts & Reels 2026',
+      division: 'Video Editor',
       category: 'Video Editor',
+      contentCategoryId: 'cc-001',
+      contentCategoryName: 'SOP & Panduan Kerja',
       summary: 'Standar resolusi, alur animasi, dan rasio pemotongan klip video promosi.',
       author: 'Ananda Reva',
       date: '27 Jul 2026',

@@ -18,12 +18,12 @@ const getEnvVar = (key: string, fallback: string): string => {
 
 export const supabaseUrl = getEnvVar(
   'VITE_SUPABASE_URL',
-  'https://wixrwqftnvtjbmefbddc.supabase.co'
+  'https://cjfbaqneivklchicodcv.supabase.co'
 );
 
 export const supabaseAnonKey = getEnvVar(
   'VITE_SUPABASE_ANON_KEY',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndpeHJ3cWZ0bnZ0amJtZWZiZGRjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU0OTkxOTUsImV4cCI6MjEwMTA3NTE5NX0.S4X1oYUFkZzFJYwqMHZB-aLKiMpkGkcCpqMe2pvHsz8'
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqZmJhcW5laXZrbGNoaWNvZGN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1OTUyODcsImV4cCI6MjEwMjE3MTI4N30.ybgjHvnzRX_9m7ZL7V5VK5g19lBoFxYK4ulT7TDdKMk'
 );
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);

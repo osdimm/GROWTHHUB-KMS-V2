@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { ActivityLog, PopularTopic, NavigationTab, User, KnowledgeArticle, HandoverDoc, ForumTopic } from '../../types';
-import { initialForumTopics } from '../../data/mockData';
 
 interface DashboardViewProps {
   activities?: ActivityLog[];
@@ -28,8 +27,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const totalKbArticles = articles.length;
   const totalHandovers = handoverDocs.length;
 
-  // Derive real Topik Populer from actual forumTopics state (or fallback to initialForumTopics)
-  const displayForumTopics = forumTopics && forumTopics.length > 0 ? forumTopics : initialForumTopics;
+  // Derive real Topik Populer from actual forumTopics state
+  const displayForumTopics = forumTopics || [];
 
   // Sort topics by views and comments to show truly popular topics
   const sortedPopularTopics = [...displayForumTopics]

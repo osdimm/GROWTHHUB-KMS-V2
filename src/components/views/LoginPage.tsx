@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { User } from '../../types';
 import { GrowthHubLogo } from '../GrowthHubLogo';
+import { getProfilesFromSupabase } from '../../services/supabaseService';
 
 interface LoginPageProps {
   users: User[];
@@ -20,38 +21,48 @@ export const LoginPage: React.FC<LoginPageProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setLoginError(null);
 
-    setTimeout(() => {
-      setIsLoading(false);
-      const cleanEmail = emailInput.trim().toLowerCase();
-      
-      // Find matching user by email or fallback by name
-      const matchedUser = users.find(
-        (u) => u.email.toLowerCase() === cleanEmail || u.name.toLowerCase() === cleanEmail
-      );
+    const cleanEmail = emailInput.trim().toLowerCase();
+    let currentUsersList = users;
 
-      if (matchedUser) {
-        if (matchedUser.status === 'Nonaktif') {
-          setLoginError('Akun ini sedang nonaktif. Silakan hubungi Administrator.');
-          return;
+    if (!currentUsersList || currentUsersList.length === 0) {
+      try {
+        const liveProfiles = await getProfilesFromSupabase();
+        if (liveProfiles && liveProfiles.length > 0) {
+          currentUsersList = liveProfiles;
         }
-
-        const expectedPassword = matchedUser.password || 'password123';
-        if (passwordInput !== expectedPassword) {
-          setLoginError('Kata sandi yang Anda masukkan salah. Silakan periksa kembali kata sandi Anda.');
-          return;
-        }
-
-        onLoginSuccess(matchedUser);
-      } else {
-        // If not found in users list, check default admin or show error
-        setLoginError('Email atau username tidak ditemukan. Silakan periksa kembali data login Anda.');
+      } catch (err) {
+        console.error('Error fetching live profiles for login:', err);
       }
-    }, 600);
+    }
+
+    setIsLoading(false);
+    
+    // Find matching user by email or fallback by name
+    const matchedUser = currentUsersList.find(
+      (u) => u.email.toLowerCase() === cleanEmail || u.name.toLowerCase() === cleanEmail
+    );
+
+    if (matchedUser) {
+      if (matchedUser.status === 'Nonaktif') {
+        setLoginError('Akun ini sedang nonaktif. Silakan hubungi Administrator.');
+        return;
+      }
+
+      const expectedPassword = matchedUser.password || 'password123';
+      if (passwordInput !== expectedPassword) {
+        setLoginError('Kata sandi yang Anda masukkan salah. Silakan periksa kembali kata sandi Anda.');
+        return;
+      }
+
+      onLoginSuccess(matchedUser);
+    } else {
+      setLoginError('Email atau username tidak ditemukan. Silakan periksa kembali data login Anda.');
+    }
   };
 
   return (
