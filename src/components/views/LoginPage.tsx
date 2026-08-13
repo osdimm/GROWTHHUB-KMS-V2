@@ -17,7 +17,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({
   const [emailInput, setEmailInput] = useState('dandi.p@gmail.com');
   const [passwordInput, setPasswordInput] = useState('password123');
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
 
@@ -147,19 +146,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                   </span>
                 </button>
               </div>
-            </div>
-
-            <div className="flex items-center gap-2.5 pt-1">
-              <input
-                id="remember"
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                className="w-4 h-4 rounded border-slate-300 text-[#006194] focus:ring-[#006194] cursor-pointer"
-              />
-              <label htmlFor="remember" className="text-xs text-slate-600 cursor-pointer font-medium">
-                Ingat saya selama 30 hari
-              </label>
             </div>
 
             <button
