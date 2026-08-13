@@ -283,17 +283,7 @@ export default function App() {
     const loadSupabaseData = async () => {
       setIsLoadingSupabase(true);
       try {
-        const [
-          dbUsers,
-          dbCategories,
-          dbContentCategories,
-          dbArticles,
-          dbHandovers,
-          dbTopics,
-          dbPending,
-          dbActivities,
-          dbNotifications
-        ] = await Promise.all([
+        const results = await Promise.allSettled([
           getProfilesFromSupabase(),
           getCategoriesFromSupabase(),
           getContentCategoriesFromSupabase(),
@@ -304,6 +294,16 @@ export default function App() {
           getActivitiesFromSupabase(),
           getNotificationsFromSupabase()
         ]);
+
+        const dbUsers = results[0].status === 'fulfilled' ? results[0].value : null;
+        const dbCategories = results[1].status === 'fulfilled' ? results[1].value : null;
+        const dbContentCategories = results[2].status === 'fulfilled' ? results[2].value : null;
+        const dbArticles = results[3].status === 'fulfilled' ? results[3].value : null;
+        const dbHandovers = results[4].status === 'fulfilled' ? results[4].value : null;
+        const dbTopics = results[5].status === 'fulfilled' ? results[5].value : null;
+        const dbPending = results[6].status === 'fulfilled' ? results[6].value : null;
+        const dbActivities = results[7].status === 'fulfilled' ? results[7].value : null;
+        const dbNotifications = results[8].status === 'fulfilled' ? results[8].value : null;
 
         if (dbUsers && dbUsers.length > 0) setUsers(dbUsers);
         if (dbCategories !== null) setCategories(dbCategories);
@@ -347,10 +347,10 @@ export default function App() {
           });
         }
 
-        if (dbTopics || []) setForumTopics(dbTopics || []);
-        if (dbPending || []) setPendingDocs(dbPending || []);
-        if (dbActivities || []) setActivities(dbActivities || []);
-        if (dbNotifications !== null && dbNotifications.length > 0) setNotifications(dbNotifications);
+        if (dbTopics) setForumTopics(dbTopics);
+        if (dbPending) setPendingDocs(dbPending);
+        if (dbActivities) setActivities(dbActivities);
+        if (dbNotifications && dbNotifications.length > 0) setNotifications(dbNotifications);
       } catch (err) {
         console.error('Failed to sync with Supabase on mount:', err);
       } finally {
@@ -817,17 +817,37 @@ export default function App() {
     );
   };
 
-  // Get active currentUser
-  const currentUser = users.find((u) => u.id === currentUserId) || users.find((u) => u.role === activeRole) || {
-    id: activeRole === 'Admin' ? 'u-admin' : activeRole === 'Manajer' ? 'u-manajer' : activeRole === 'Karyawan' ? 'u-karyawan' : 'u-associate',
-    name: activeRole === 'Admin' ? 'Dandi Pangestu' : activeRole === 'Manajer' ? 'Andi Darmawan' : activeRole === 'Karyawan' ? 'Ananda Reva' : 'Rahmawati',
-    email: activeRole === 'Admin' ? 'dandi.p@gmail.com' : activeRole === 'Manajer' ? 'andi.darmawan@gmail.com' : activeRole === 'Karyawan' ? 'ananda.reva@gmail.com' : 'rahmawati@gmail.com',
-    role: activeRole,
-    division: activeRole === 'Admin' ? 'Administration' : activeRole === 'Manajer' ? 'Talent Development' : activeRole === 'Karyawan' ? 'Graphic Design' : 'Public Relation',
-    position: activeRole,
-    initials: activeRole === 'Admin' ? 'DP' : activeRole === 'Manajer' ? 'AD' : activeRole === 'Karyawan' ? 'AR' : 'RW',
-    status: 'Aktif' as const
-  };
+  // Get active currentUser (with instant sessionStorage restoration on page refresh)
+  const savedUserJson = typeof window !== 'undefined' ? sessionStorage.getItem('kms_current_user') : null;
+  let savedUserProfile: User | null = null;
+  if (savedUserJson) {
+    try {
+      savedUserProfile = JSON.parse(savedUserJson);
+    } catch {
+      // Ignore
+    }
+  }
+
+  const currentUser: User =
+    users.find((u) => u.id === currentUserId) ||
+    users.find((u) => u.role === activeRole) ||
+    savedUserProfile || {
+      id: currentUserId || 'u-user',
+      name: 'Pengguna',
+      email: '',
+      role: activeRole,
+      division: 'Administration',
+      position: activeRole,
+      initials: 'P',
+      status: 'Aktif' as const
+    };
+
+  // Persist current active user profile to sessionStorage for instant restoration on refresh
+  useEffect(() => {
+    if (isLoggedIn && currentUser && currentUser.name && currentUser.name !== 'Pengguna') {
+      safeSessionStorageSet('kms_current_user', JSON.stringify(currentUser));
+    }
+  }, [isLoggedIn, currentUser]);
 
   // Filter notifications relevant to current active user (with 7-day auto-expiry filter)
   const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
