@@ -439,9 +439,8 @@ export default function App() {
     // Mark as processed immediately so duplicate re-evaluations won't recreate it
     processedReplyNotifIds.current.add(replyNotifId);
 
-    const loggedInUser = users.find((u) => u.id === currentUserId) || users[0];
-    const loggedInUserName = loggedInUser ? loggedInUser.name : '';
-    const cleanLoggedIn = cleanName(loggedInUserName);
+    const currentUser = users.find((u) => u.id === currentUserId) || users[0];
+    const cleanLoggedIn = cleanName(currentUser.name);
 
     const isSender =
       cleanLoggedIn &&
@@ -451,6 +450,7 @@ export default function App() {
 
     const isRecipient =
       cleanLoggedIn &&
+      !isSender &&
       (cleanTargetAuthor === cleanLoggedIn ||
         cleanTargetAuthor.includes(cleanLoggedIn) ||
         cleanLoggedIn.includes(cleanTargetAuthor));
@@ -485,8 +485,8 @@ export default function App() {
       console.error('Gagal simpan notifikasi balasan ke Supabase:', err)
     );
 
-    // Trigger popup toast alert when reply is posted or received!
-    if (isRecipient || isSender) {
+    // Trigger popup toast alert ONLY for the recipient (User B who was replied to), NEVER for the sender (User A)
+    if (isRecipient) {
       if (!foundTopicId && topicsList.length > 0) {
         foundTopicId = topicsList[0].id;
       }
