@@ -14,7 +14,10 @@ export const buildCommentTree = (comments: ForumComment[]): CommentTreeNode[] =>
   const dedupMap = new Map<string, ForumComment>();
   comments.forEach((c) => {
     if (!c.id) return;
-    const isDeleted = c.author === '[Dihapus]' || c.content === '[Komentar telah dihapus]' || c.content === '[Pesan telah dihapus]';
+    const isDeleted =
+      c.author === '[Dihapus]' ||
+      c.content === '[Komentar telah dihapus]' ||
+      c.content === '[Pesan telah dihapus]';
 
     if (isDeleted) {
       dedupMap.set(c.id, c);
@@ -45,13 +48,19 @@ export const buildCommentTree = (comments: ForumComment[]): CommentTreeNode[] =>
     map.set(c.id, { ...c, children: [] });
   });
 
-  // 3. Attach children and track child IDs to prevent duplicate root rendering
+  // 3. Attach children and track child IDs (Pinned comments are promoted to root)
   const childNodeIds = new Set<string>();
   const roots: CommentTreeNode[] = [];
 
   uniqueComments.forEach((c) => {
     const node = map.get(c.id)!;
     let parentFound = false;
+
+    // PINNED COMMENTS: Promoted directly to top-level root (detached from parent if any)
+    if (node.isPinned) {
+      roots.push(node);
+      return;
+    }
 
     // Direct parentId match
     if (c.parentId && map.has(c.parentId) && c.parentId !== c.id) {
@@ -62,6 +71,7 @@ export const buildCommentTree = (comments: ForumComment[]): CommentTreeNode[] =>
       // Mention match: check if content starts with @[AuthorName] of any comment
       const parentCandidate = uniqueComments.find((p) => {
         if (p.id === c.id) return false;
+        if (p.author === '[Dihapus]') return false;
         const authorNameLower = p.author.trim().toLowerCase();
         const contentLower = c.content.trim().toLowerCase();
         return (
@@ -84,6 +94,12 @@ export const buildCommentTree = (comments: ForumComment[]): CommentTreeNode[] =>
     }
   });
 
-  // Filter out any roots that are actually children
-  return roots.filter((r) => !childNodeIds.has(r.id));
+  // 4. Filter roots & Sort so PINNED comments appear at the VERY TOP of the list
+  const validRoots = roots.filter((r) => r.isPinned || !childNodeIds.has(r.id));
+
+  return validRoots.sort((a, b) => {
+    if (a.isPinned && !b.isPinned) return -1;
+    if (!a.isPinned && b.isPinned) return 1;
+    return 0;
+  });
 };
