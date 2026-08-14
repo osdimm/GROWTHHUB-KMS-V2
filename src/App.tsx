@@ -1163,26 +1163,18 @@ export default function App() {
     setForumTopics((prev) =>
       prev.map((t) => {
         if (t.id === topicId) {
-          const hasChildren = t.comments.some((c) => c.parentId === commentId);
-          let updatedComments: ForumComment[];
-
-          if (hasChildren) {
-            updatedComments = t.comments.map((c) => {
-              if (c.id === commentId) {
-                const softDeleted: ForumComment = {
-                  ...c,
-                  author: '[Dihapus]',
-                  content: '[Komentar telah dihapus]'
-                };
-                saveForumCommentToSupabase(topicId, softDeleted).catch(console.error);
-                return softDeleted;
-              }
-              return c;
-            });
-          } else {
-            updatedComments = t.comments.filter((c) => c.id !== commentId);
-            deleteForumCommentFromSupabase(commentId).catch(console.error);
-          }
+          const updatedComments = t.comments.map((c) => {
+            if (c.id === commentId) {
+              const softDeleted: ForumComment = {
+                ...c,
+                author: '[Dihapus]',
+                content: '[Komentar telah dihapus]'
+              };
+              saveForumCommentToSupabase(topicId, softDeleted).catch(console.error);
+              return softDeleted;
+            }
+            return c;
+          });
 
           const updatedTopic = {
             ...t,
