@@ -313,21 +313,6 @@ export const ProfilPenggunaView: React.FC<ProfilPenggunaViewProps> = ({
           </div>
         </div>
 
-        {/* Warning Banner if Default Password */}
-        {isDefaultPass && (
-          <div className="p-4 bg-amber-50 border-2 border-amber-300 rounded-2xl flex items-start gap-3.5 text-amber-900 shadow-sm animate-pulse">
-            <span className="material-symbols-outlined text-amber-600 text-2xl shrink-0">lock_reset</span>
-            <div className="flex-1 text-xs leading-relaxed">
-              <span className="font-bold text-sm block mb-1 text-amber-950 flex items-center gap-1.5">
-                <span>⚠️ PERINGATAN PAKSA: Ubah Kata Sandi Akun Baru Anda</span>
-              </span>
-              <p>
-                Akun Anda ditambahkan oleh Administrator dengan kata sandi bawaan (<strong className="bg-amber-200/80 px-1.5 py-0.5 rounded font-mono text-amber-950">password123</strong>). Demi menjaga keamanan data KMS Growth Hub, Anda <strong>wajib mengganti kata sandi</strong> dengan kata sandi rahasia pribadi Anda pada formulir di bawah ini.
-              </p>
-            </div>
-          </div>
-        )}
-
         {/* Keamanan & Sandi Form */}
         <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
           <h4 className="font-bold text-slate-900 text-base border-b border-slate-100 pb-3 flex items-center gap-2">
