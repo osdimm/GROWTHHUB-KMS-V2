@@ -10,10 +10,17 @@ export interface CommentTreeNode extends ForumComment {
 export const buildCommentTree = (comments: ForumComment[]): CommentTreeNode[] => {
   if (!comments || comments.length === 0) return [];
 
-  // 1. Deduplicate comments by ID and by author+content
+  // 1. Deduplicate comments by ID and by author+content (excluding soft-deleted comments)
   const dedupMap = new Map<string, ForumComment>();
   comments.forEach((c) => {
     if (!c.id) return;
+    const isDeleted = c.author === '[Dihapus]' || c.content === '[Komentar telah dihapus]' || c.content === '[Pesan telah dihapus]';
+
+    if (isDeleted) {
+      dedupMap.set(c.id, c);
+      return;
+    }
+
     const contentKey = `${c.author.trim().toLowerCase()}:::${c.content.trim().toLowerCase()}`;
     const existingById = dedupMap.get(c.id);
     const existingByContent = dedupMap.get(contentKey);
