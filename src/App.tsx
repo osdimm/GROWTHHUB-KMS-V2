@@ -115,7 +115,6 @@ export default function App() {
   const [currentUserId, setCurrentUserId] = useState<string>(() => {
     return sessionStorage.getItem('kms_current_user_id') || 'u-admin';
   });
-  const [showForcePasswordModal, setShowForcePasswordModal] = useState<boolean>(true);
 
   // Theme Mode State (with localStorage persistence & system preference detection)
   const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
@@ -940,9 +939,6 @@ export default function App() {
     const targetUser = users.find((u) => u.role === newRole);
     if (targetUser) {
       setCurrentUserId(targetUser.id);
-      setShowForcePasswordModal(!!targetUser.mustChangePassword);
-    } else {
-      setShowForcePasswordModal(false);
     }
     if (newRole === 'Karyawan' || newRole === 'Associate') {
       if (activeTab === 'dashboard' || activeTab === 'data-pengguna' || activeTab === 'hak-akses' || activeTab === 'laporan-penggunaan' || activeTab === 'verifikasi-konten') {
@@ -1244,7 +1240,6 @@ export default function App() {
           sessionStorage.setItem('kms_is_logged_in', 'true');
           setCurrentUserId(user.id);
           setActiveRole(user.role);
-          setShowForcePasswordModal(!!user.mustChangePassword);
           if (user.role === 'Karyawan' || user.role === 'Associate') {
             setActiveTab('knowledge-base');
           } else if (user.role === 'Manajer') {
@@ -1328,30 +1323,6 @@ export default function App() {
       {/* Main App Container */}
       <main className="pt-20 pb-12 lg:pl-[280px] w-full transition-all">
         <div className="px-4 sm:px-6 lg:px-8 w-full">
-        {/* Force Password Change Sticky Alert Banner */}
-        {currentUser.mustChangePassword && activeTab !== 'profil-pengguna' && (
-          <div className="bg-amber-500 text-white p-4 rounded-2xl shadow-lg border border-amber-600 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs mb-6 font-medium animate-in fade-in duration-200">
-            <div className="flex items-center gap-3">
-              <span className="material-symbols-outlined text-2xl shrink-0 text-amber-100 animate-bounce">
-                lock_reset
-              </span>
-              <div>
-                <strong className="block text-sm font-bold text-white">⚠️ PERINGATAN UBAH PASSWORD PAKSA</strong>
-                <span className="text-amber-50">
-                  Akun Anda ditambahkan oleh Admin dengan password default (<strong>password123</strong>). Demi keamanan akun Anda, silakan ubah kata sandi sekarang.
-                </span>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => setActiveTab('profil-pengguna')}
-              className="px-4 py-2.5 bg-white text-amber-950 rounded-xl font-bold hover:bg-amber-100 transition-all shrink-0 shadow-sm flex items-center gap-1.5 self-end sm:self-auto hover:scale-105 active:scale-95"
-            >
-              <span className="material-symbols-outlined text-base">person</span>
-              <span>Arahkan ke Profil Pengguna</span>
-            </button>
-          </div>
-        )}
         {isLoadingSupabase ? (
           <div className="flex-1 flex items-center justify-center p-12 bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200/80 min-h-[420px] shadow-sm">
             <div className="text-center space-y-4 animate-in fade-in duration-200">
@@ -1481,55 +1452,6 @@ export default function App() {
         )}
         </div>
       </main>
-
-      {/* Forced Password Change Modal */}
-      {showForcePasswordModal && currentUser.mustChangePassword && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 p-6 space-y-5 text-slate-800">
-            <div className="flex items-start gap-3.5">
-              <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center shrink-0 text-amber-600 shadow-sm">
-                <span className="material-symbols-outlined text-2xl">lock_reset</span>
-              </div>
-              <div>
-                <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-200">
-                  Notifikasi Wajib Pengguna Baru
-                </span>
-                <h3 className="text-base font-bold text-slate-900 mt-1">Ganti Password Bawaan Admin</h3>
-              </div>
-            </div>
-
-            <div className="space-y-2.5 text-xs text-slate-600 leading-relaxed bg-amber-50/60 p-4 rounded-xl border border-amber-200/80">
-              <p>
-                Halo <strong>{currentUser.name}</strong>, akun Anda telah ditambahkan oleh Admin dengan kata sandi default (<code className="bg-amber-200/80 text-amber-950 px-1.5 py-0.5 rounded font-mono font-bold">password123</code>).
-              </p>
-              <p className="text-slate-600">
-                Demi menjaga kerahasiaan & keamanan data internal KMS Growth Hub, Anda <strong>diwajibkan untuk mengganti kata sandi bawaan ini</strong> dengan kata sandi pribadi Anda di menu <strong>Profil Pengguna</strong>.
-              </p>
-            </div>
-
-            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
-              <button
-                type="button"
-                onClick={() => setShowForcePasswordModal(false)}
-                className="px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-500 hover:bg-slate-100 transition-colors"
-              >
-                Nanti Saja
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowForcePasswordModal(false);
-                  setActiveTab('profil-pengguna');
-                }}
-                className="px-4 py-2.5 rounded-xl text-xs font-bold bg-[#006194] text-white hover:bg-[#004b73] transition-colors flex items-center gap-2 shadow-md shadow-[#006194]/20"
-              >
-                <span className="material-symbols-outlined text-base">person</span>
-                <span>Arahkan ke Profil Pengguna</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Realtime Instant Reply Notification Popup Alert (Mobile & Desktop Safe z-[9999]) */}
       {replyNotificationPopup && (

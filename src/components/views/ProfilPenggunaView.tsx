@@ -180,6 +180,23 @@ export const ProfilPenggunaView: React.FC<ProfilPenggunaViewProps> = ({
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
+      {/* Peringatan Ubah Password (HANYA tampil di layar Profil Pengguna) */}
+      {(currentUser.mustChangePassword || isDefaultPass) && (
+        <div className="bg-amber-500 text-white p-4.5 rounded-2xl shadow-lg border border-amber-600 flex items-center justify-between gap-3 text-xs font-medium animate-in fade-in duration-200">
+          <div className="flex items-center gap-3">
+            <span className="material-symbols-outlined text-2xl shrink-0 text-amber-100 animate-bounce">
+              lock_reset
+            </span>
+            <div>
+              <strong className="block text-sm font-bold text-white">⚠️ PERINGATAN UBAH PASSWORD PAKSA</strong>
+              <span className="text-amber-50 leading-relaxed block mt-0.5">
+                Akun Anda menggunakan kata sandi default (<strong>password123</strong>). Demi keamanan akun Anda, silakan ubah kata sandi pada formulir di bawah ini.
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div>
         <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Profil Pengguna</h2>
