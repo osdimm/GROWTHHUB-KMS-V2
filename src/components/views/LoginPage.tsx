@@ -14,8 +14,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({
   onLoginSuccess
 }) => {
   // Login form state
-  const [emailInput, setEmailInput] = useState('dandi.p@gmail.com');
-  const [passwordInput, setPasswordInput] = useState('password123');
+  const [emailInput, setEmailInput] = useState('');
+  const [passwordInput, setPasswordInput] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
@@ -88,13 +88,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                 <span className="font-bold block mb-0.5">Gagal Masuk</span>
                 <p className="leading-relaxed">{loginError}</p>
               </div>
-              <button
-                type="button"
-                onClick={() => setLoginError(null)}
-                className="text-rose-500 hover:text-rose-700"
-              >
-                <span className="material-symbols-outlined text-[16px]">close</span>
-              </button>
             </div>
           )}
 
