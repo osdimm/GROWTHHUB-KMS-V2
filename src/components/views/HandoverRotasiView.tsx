@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { HandoverDoc } from '../../types';
 import { downloadDocumentFile, readFileAsDataURL } from '../../utils/documentDownloader';
 import { uploadFileToSupabaseStorage } from '../../services/supabaseService';
@@ -54,6 +54,24 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
   const [newPeriodInput, setNewPeriodInput] = useState('');
   const [editingPeriodOldName, setEditingPeriodOldName] = useState<string | null>(null);
   const [editingPeriodNewName, setEditingPeriodNewName] = useState('');
+
+  // Division Filter Dropdown State
+  const [showDivDropdown, setShowDivDropdown] = useState(false);
+  const divisionDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Delete Confirmation Modal State
+  const [docToDelete, setDocToDelete] = useState<HandoverDoc | null>(null);
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (divisionDropdownRef.current && !divisionDropdownRef.current.contains(e.target as Node)) {
+        setShowDivDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // New Handover Form
   const [uploadSource, setUploadSource] = useState<'file' | 'link'>('file');
@@ -233,6 +251,23 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
     triggerToast(`Mengunduh berkas handover "${doc.title}"...`);
   };
 
+  const handleOpenDeleteHandover = (doc: HandoverDoc, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setDocToDelete(doc);
+    setShowDeleteConfirmModal(true);
+  };
+
+  const handleConfirmDeleteHandover = () => {
+    if (!docToDelete) return;
+    onDeleteHandover(docToDelete.id);
+    triggerToast(`Dokumen handover "${docToDelete.title}" berhasil dihapus.`);
+    if (previewDoc && previewDoc.id === docToDelete.id) {
+      setPreviewDoc(null);
+    }
+    setDocToDelete(null);
+    setShowDeleteConfirmModal(false);
+  };
+
   const handleUploadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFileError(null);
@@ -355,61 +390,84 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
-          {currentUserRole === 'Admin' && (
-            <button
-              onClick={() => setShowManagePeriodsModal(true)}
-              className="flex items-center gap-2 px-4 py-2.5 bg-amber-50 text-amber-900 border border-amber-200 rounded-xl text-xs font-bold hover:bg-amber-100 transition-all shadow-2xs"
-            >
-              <span className="material-symbols-outlined text-[18px]">edit_calendar</span>
-              <span>Kelola & Edit Periode</span>
-            </button>
-          )}
+        <div className="flex flex-col items-start sm:items-end gap-2">
+          <div className="flex items-center gap-3">
+            {currentUserRole === 'Admin' && (
+              <button
+                onClick={() => setShowManagePeriodsModal(true)}
+                className="flex items-center gap-2 px-4 py-2.5 bg-amber-50 text-amber-900 border border-amber-200 rounded-xl text-xs font-bold hover:bg-amber-100 transition-all shadow-2xs cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[18px]">edit_calendar</span>
+                <span>Kelola & Edit Periode</span>
+              </button>
+            )}
 
-          <button
-            onClick={() => setShowUploadModal(true)}
-            className="flex items-center gap-2 px-5 py-2.5 bg-[#006194] text-white rounded-xl text-xs font-bold hover:bg-[#004b73] transition-all shadow-sm"
-          >
-            <span className="material-symbols-outlined text-[18px]">upload_file</span>
-            <span>Unggah Handover Baru</span>
-          </button>
+            <button
+              onClick={() => setShowUploadModal(true)}
+              className="flex items-center gap-2 px-5 py-2.5 bg-[#006194] text-white rounded-xl text-xs font-bold hover:bg-[#004b73] transition-all shadow-sm cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[18px]">upload_file</span>
+              <span>Unggah Handover Baru</span>
+            </button>
+          </div>
+
+          {/* Dropdown Filter Divisi (Diletakkan di bawah tombol action) */}
+          <div className="relative" ref={divisionDropdownRef}>
+            <button
+              type="button"
+              onClick={() => setShowDivDropdown(!showDivDropdown)}
+              className="flex items-center justify-between gap-2 px-4 py-2 bg-white text-slate-800 border border-slate-200 rounded-xl text-xs font-semibold hover:bg-slate-50 transition-all cursor-pointer shadow-xs"
+            >
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-slate-500 text-[18px]">filter_list</span>
+                <span>Divisi: {selectedDivision}</span>
+              </div>
+              <span className="material-symbols-outlined text-slate-400 text-[16px]">expand_more</span>
+            </button>
+
+            {showDivDropdown && (
+              <div className="absolute right-0 mt-2 w-72 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 p-2 animate-in fade-in duration-150">
+                <div className="max-h-56 overflow-y-auto custom-scrollbar py-1">
+                  {divisions.map((div) => (
+                    <button
+                      key={div}
+                      type="button"
+                      onClick={() => {
+                        setSelectedDivision(div);
+                        setShowDivDropdown(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                        selectedDivision === div
+                          ? 'bg-sky-50 text-[#006194] font-bold'
+                          : 'text-slate-700 hover:bg-slate-50'
+                      }`}
+                    >
+                      {div}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Filter Bar */}
-      <div className="bg-white p-4 border border-slate-200 rounded-2xl shadow-sm space-y-4">
-        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
-          {/* Period Filter Tabs */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 custom-scrollbar">
-            {periods.map((p, idx) => (
-              <button
-                key={`period-${p}-${idx}`}
-                onClick={() => setSelectedPeriod(p)}
-                className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
-                  selectedPeriod === p
-                    ? 'bg-[#006194] text-white shadow-sm'
-                    : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
-                }`}
-              >
-                {p}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-3">
-            {/* Division Selector */}
-            <select
-              value={selectedDivision}
-              onChange={(e) => setSelectedDivision(e.target.value)}
-              className="bg-slate-50 border border-slate-200 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-semibold focus:ring-1 focus:ring-[#006194] outline-none"
+      {/* Periode Rotasi Filter Pills */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 custom-scrollbar">
+          {periods.map((p, idx) => (
+            <button
+              key={`period-${p}-${idx}`}
+              onClick={() => setSelectedPeriod(p)}
+              className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+                selectedPeriod === p
+                  ? 'bg-[#006194] text-white shadow-sm'
+                  : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
+              }`}
             >
-              {divisions.map((d, idx) => (
-                <option key={`div-${d}-${idx}`} value={d}>
-                  Divisi: {d}
-                </option>
-              ))}
-            </select>
-          </div>
+              {p}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -516,12 +574,8 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
                   )}
 
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDeleteHandover(doc.id);
-                      triggerToast(`Dokumen "${doc.title}" dihapus.`);
-                    }}
-                    className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    onClick={(e) => handleOpenDeleteHandover(doc, e)}
+                    className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
                     title="Hapus"
                   >
                     <span className="material-symbols-outlined text-[20px]">delete</span>
@@ -992,6 +1046,40 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
                 className="px-5 py-2.5 bg-[#006194] text-white rounded-xl text-xs font-bold hover:bg-[#004b73] shadow-sm"
               >
                 Selesai
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirmModal && docToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-6 text-center">
+            <div className="w-12 h-12 bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-300 rounded-full flex items-center justify-center mx-auto mb-3">
+              <span className="material-symbols-outlined text-2xl">delete_forever</span>
+            </div>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-1">Hapus Dokumen Handover?</h3>
+            <p className="text-xs text-slate-600 dark:text-slate-400 mb-4 leading-relaxed">
+              Apakah Anda yakin ingin menghapus dokumen handover <strong className="text-slate-900 dark:text-slate-100">"{docToDelete.title}"</strong>? Tindakan ini tidak dapat dibatalkan.
+            </p>
+            <div className="flex justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDeleteConfirmModal(false);
+                  setDocToDelete(null);
+                }}
+                className="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDeleteHandover}
+                className="px-5 py-2.5 bg-rose-600 text-white text-xs font-bold rounded-xl hover:bg-rose-700 shadow-sm cursor-pointer"
+              >
+                Ya, Hapus Dokumen
               </button>
             </div>
           </div>
