@@ -696,12 +696,27 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({
                     <span className="material-symbols-outlined text-[16px]">person</span>
                     <span>{art.author || 'Anonim'}</span>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="flex items-center gap-1">
-                      <span className="material-symbols-outlined text-[16px]">visibility</span>
-                      {art.views || 0}
-                    </span>
-                    {!isLinkDocument(art) && (
+                  <div className="flex items-center gap-2">
+                    {isLinkDocument(art) ? (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const targetUrl = art.linkUrl || art.fileUrl;
+                          if (targetUrl && targetUrl.trim().length > 0) {
+                            const finalUrl = targetUrl.startsWith('http') ? targetUrl : `https://${targetUrl}`;
+                            window.open(finalUrl, '_blank', 'noopener,noreferrer');
+                            triggerToast(`Membuka tautan eksternal "${art.title}"...`);
+                          } else {
+                            triggerToast(`⚠️ Tautan URL untuk "${art.title}" tidak tersedia.`);
+                          }
+                        }}
+                        className="p-1 text-[#006194] dark:text-indigo-400 hover:bg-sky-50 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer flex items-center gap-1 font-bold text-xs"
+                        title="Buka Tautan Link"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">open_in_new</span>
+                      </button>
+                    ) : (
                       <button
                         type="button"
                         onClick={(e) => {
