@@ -487,32 +487,33 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
               className="bg-white border border-slate-200 rounded-2xl p-5 hover:border-[#006194] hover:shadow-md transition-all flex flex-col justify-between cursor-pointer group"
             >
               <div>
+                {/* Top Header Row: Left = Divisi (Knowledge Base Category color style), Right = Format File */}
                 <div className="flex items-center justify-between gap-2 mb-3">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span
-                      className={`px-2.5 py-1 rounded-md text-[10px] uppercase tracking-wider flex items-center gap-1 border ${getBadgeClass(
-                        doc.fileType
-                      )}`}
-                    >
-                      <span className="material-symbols-outlined text-[14px]">
-                        {doc.fileType === 'PDF'
-                          ? 'picture_as_pdf'
-                          : doc.fileType === 'XLSX'
-                          ? 'table_chart'
-                          : doc.fileType === 'PPTX'
-                          ? 'slideshow'
-                          : doc.fileType === 'LINK'
-                          ? 'link'
-                          : 'description'}
-                      </span>
-                      <span>{doc.fileType}</span>
-                    </span>
+                  {/* Divisi Badge (Kiri Atas) */}
+                  <span className="px-2.5 py-1 bg-sky-100 text-[#006194] font-extrabold text-[10px] rounded-md flex items-center gap-1 border border-sky-200/80 uppercase tracking-wider shadow-2xs">
+                    <span className="material-symbols-outlined text-[14px]">domain</span>
+                    <span>{doc.division}</span>
+                  </span>
 
-                    <span className="px-2.5 py-1 bg-amber-50 text-amber-900 border border-amber-200/80 rounded-md text-[10px] font-extrabold flex items-center gap-1 shadow-2xs">
-                      <span className="material-symbols-outlined text-[13px]">calendar_today</span>
-                      <span>{doc.rotationPeriod}</span>
+                  {/* Format File Badge (Kanan Atas) */}
+                  <span
+                    className={`px-2.5 py-1 rounded-md text-[10px] uppercase tracking-wider flex items-center gap-1 border ${getBadgeClass(
+                      doc.fileType
+                    )}`}
+                  >
+                    <span className="material-symbols-outlined text-[14px]">
+                      {doc.fileType === 'PDF'
+                        ? 'picture_as_pdf'
+                        : doc.fileType === 'XLSX'
+                        ? 'table_chart'
+                        : doc.fileType === 'PPTX'
+                        ? 'slideshow'
+                        : doc.fileType === 'LINK'
+                        ? 'link'
+                        : 'description'}
                     </span>
-                  </div>
+                    <span>{doc.fileType}</span>
+                  </span>
                 </div>
 
                 <h4 className="font-bold text-slate-900 text-base leading-snug line-clamp-2 group-hover:text-[#006194] transition-colors">
@@ -525,11 +526,12 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
                   </p>
                 )}
 
+                {/* Periode Rotasi (Di tempat lokasi Divisi sebelumnya) */}
                 <div className="mt-3 flex items-center gap-2 text-xs font-semibold text-slate-500">
-                  <span className="material-symbols-outlined text-[18px] text-[#006194]">
-                    domain
+                  <span className="material-symbols-outlined text-[18px] text-amber-600">
+                    calendar_today
                   </span>
-                  <span>{doc.division}</span>
+                  <span className="font-bold text-slate-700">Periode: {doc.rotationPeriod}</span>
                 </div>
               </div>
 
