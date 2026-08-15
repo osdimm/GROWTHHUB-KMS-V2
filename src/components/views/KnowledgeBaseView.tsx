@@ -292,6 +292,27 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({
   const [uploadProgress, setUploadProgress] = useState(0);
 
   const handleOpenPreviewArticle = (art: KnowledgeArticle) => {
+    const isLink = isLinkDocument(art) || art.fileType === 'LINK' || art.contentType === 'link' || Boolean(art.linkUrl);
+    const targetLink = art.linkUrl || art.fileUrl;
+
+    if (isLink) {
+      if (targetLink && targetLink.trim().length > 0) {
+        const finalUrl = targetLink.startsWith('http') ? targetLink : `https://${targetLink}`;
+        window.open(finalUrl, '_blank', 'noopener,noreferrer');
+        triggerToast(`Membuka tautan eksternal "${art.title}"...`);
+      } else {
+        triggerToast(`⚠️ Tautan URL untuk "${art.title}" tidak tersedia.`);
+      }
+
+      // Increment view count directly without opening preview modal
+      const newViews = (art.views || 0) + 1;
+      if (onEditArticle) {
+        onEditArticle(art.id, { views: newViews });
+      }
+      return;
+    }
+
+    // Normal file document: open file preview modal
     const newViews = (art.views || 0) + 1;
     const updatedArt = { ...art, views: newViews };
     setPreviewArticle(updatedArt);
@@ -301,6 +322,20 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({
   };
 
   const handleDownloadDocument = (art: KnowledgeArticle) => {
+    const isLink = isLinkDocument(art) || art.fileType === 'LINK' || art.contentType === 'link' || Boolean(art.linkUrl);
+    const targetLink = art.linkUrl || art.fileUrl;
+
+    if (isLink) {
+      if (targetLink && targetLink.trim().length > 0) {
+        const finalUrl = targetLink.startsWith('http') ? targetLink : `https://${targetLink}`;
+        window.open(finalUrl, '_blank', 'noopener,noreferrer');
+        triggerToast(`Membuka tautan eksternal "${art.title}"...`);
+      } else {
+        triggerToast(`⚠️ Tautan URL untuk "${art.title}" tidak tersedia.`);
+      }
+      return;
+    }
+
     const newDownloads = (art.downloads || 0) + 1;
     if (onEditArticle) {
       onEditArticle(art.id, { downloads: newDownloads });

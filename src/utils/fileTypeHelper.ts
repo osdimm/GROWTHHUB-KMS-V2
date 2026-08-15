@@ -48,14 +48,25 @@ export function parseBytes(sizeStr?: string | number | null): number | null {
 }
 
 export function isLinkDocument(doc: { fileType?: string; contentType?: string; fileUrl?: string; linkUrl?: string }): boolean {
-  // If there's an actual file uploaded (fileUrl exists), it is NOT a link-only document!
-  if (doc.fileUrl && doc.fileUrl.trim().length > 0) {
-    return false;
+  if (doc.fileType === 'LINK' || doc.contentType === 'link') {
+    return true;
   }
-  return doc.fileType === 'LINK' || doc.contentType === 'link' || Boolean(doc.linkUrl && doc.linkUrl.trim().length > 0);
+  if (doc.linkUrl && doc.linkUrl.trim().length > 0) {
+    return true;
+  }
+  if (doc.fileUrl && (doc.fileUrl.startsWith('http://') || doc.fileUrl.startsWith('https://'))) {
+    const isDocFile = Boolean(doc.fileUrl.match(/\.(pdf|docx?|xlsx?|pptx?|png|jpe?g|gif|webp)(\?.*)?$/i));
+    if (!isDocFile) {
+      return true;
+    }
+  }
+  return false;
 }
 
-export function getEffectiveFileType(doc: { fileType?: string; fileUrl?: string; title?: string }): string {
+export function getEffectiveFileType(doc: { fileType?: string; contentType?: string; fileUrl?: string; linkUrl?: string; title?: string }): string {
+  if (isLinkDocument(doc)) {
+    return 'LINK';
+  }
   if (doc.fileType && doc.fileType !== 'LINK') {
     return doc.fileType;
   }
