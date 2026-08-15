@@ -59,31 +59,71 @@ export const LaporanPenggunaanView: React.FC<LaporanPenggunaanViewProps> = ({
     'bg-fuchsia-600', 'bg-lime-600', 'bg-orange-600', 'bg-teal-700'
   ];
 
-  // Dynamic Division Stats ranked strictly by: 1. Document Count, 2. Downloads, 3. Views
-  const divisionStats = categories.map((cat, idx) => {
+  // Standard comprehensive list of all company divisions
+  const ALL_DIVISIONS = [
+    'Talent Development',
+    'Learning Center',
+    'Performance & Career',
+    'Organization Development',
+    'Corporate Culture',
+    'Knowledge Management',
+    'HR Operations',
+    'Talent Acquisition',
+    'Employee Relations',
+    'Total Rewards',
+    'People Analytics',
+    'IT & Digital',
+    'Finance & Accounting',
+    'Legal & Compliance',
+    'Marketing & PR',
+    'General Affairs'
+  ];
+
+  // Combine categories prop and ALL_DIVISIONS to guarantee 100% complete division coverage
+  const targetDivisions = Array.from(
+    new Set([
+      ...categories.map((c) => c.name),
+      ...ALL_DIVISIONS
+    ])
+  );
+
+  // Grand Total Access Activity (Views + Downloads combined)
+  const grandTotalAccess = totalViews + totalDownloads;
+
+  // Dynamic Division Access Stats (Views + Downloads combined into total access activity)
+  const divisionStats = targetDivisions.map((divName, idx) => {
     const catArticles = articles.filter(
-      (a) => a.category.toLowerCase() === cat.name.toLowerCase()
+      (a) => a.category && a.category.trim().toLowerCase() === divName.trim().toLowerCase()
     );
     const catHandovers = handoverDocs.filter(
-      (h) => h.division.toLowerCase() === cat.name.toLowerCase()
+      (h) => h.division && h.division.trim().toLowerCase() === divName.trim().toLowerCase()
     );
-    const docCount = catArticles.length + catHandovers.length;
-    const catViews = catArticles.reduce((acc, a) => acc + (a.views || 0), 0) + catHandovers.reduce((acc, h) => acc + (h.views || 0), 0);
-    const catDownloads = catArticles.reduce((acc, a) => acc + (a.downloads || 0), 0) + catHandovers.reduce((acc, h) => acc + (h.downloads || 0), 0);
 
-    // Percentage of total documents uploaded by division
-    const progress = totalUploadedDocs > 0 ? Math.round((docCount / totalUploadedDocs) * 100) : 0;
+    const catViews = catArticles.reduce((acc, a) => acc + (a.views || 0), 0) +
+                     catHandovers.reduce((acc, h) => acc + (h.views || 0), 0);
+    const catDownloads = catArticles.reduce((acc, a) => acc + (a.downloads || 0), 0) +
+                         catHandovers.reduce((acc, h) => acc + (h.downloads || 0), 0);
+
+    // Combined Views + Downloads total access metric
+    const catTotalAccess = catViews + catDownloads;
+    const docCount = catArticles.length + catHandovers.length;
+
+    // Percentage of total platform access activity (0% if total access is 0)
+    const progress = grandTotalAccess > 0
+      ? Math.round((catTotalAccess / grandTotalAccess) * 100)
+      : 0;
 
     return {
-      name: cat.name,
+      name: divName,
       progress,
-      count: `${docCount} Dokumen (${catViews.toLocaleString('id-ID')} Views)`,
+      count: `${catTotalAccess.toLocaleString('id-ID')} Akses (${catViews} Views, ${catDownloads} Unduhan)`,
       color: palette[idx % palette.length],
       catViews,
       catDownloads,
+      catTotalAccess,
       docCount
     };
-  }).sort((a, b) => b.docCount - a.docCount || b.catDownloads - a.catDownloads || b.catViews - a.catViews);
+  }).sort((a, b) => b.catTotalAccess - a.catTotalAccess || b.docCount - a.docCount || a.name.localeCompare(b.name));
 
   const triggerToast = (msg: string) => {
     setToastMessage(msg);
@@ -493,20 +533,27 @@ ${popularDocs.map((d) => `${d.rank}. ${d.title} (${d.views} views, ${d.downloads
       <div className="grid grid-cols-12 gap-6">
         {/* Division Activity Progress Bar */}
         <div className="col-span-12 lg:col-span-6 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-          <h3 className="text-lg font-bold text-slate-900 mb-1">Aktivitas Akses Per Divisi</h3>
-          <p className="text-xs text-slate-500 mb-6">Persentase kontribusi penggunaan per departemen.</p>
+          <div className="flex items-center justify-between mb-1">
+            <h3 className="text-lg font-bold text-slate-900">Aktivitas Akses Per Divisi</h3>
+            <span className="text-[11px] font-extrabold text-[#006194] bg-sky-50 px-2.5 py-1 rounded-full border border-sky-200">
+              {divisionStats.length} Divisi Terdata
+            </span>
+          </div>
+          <p className="text-xs text-slate-500 mb-6">Persentase kontribusi total akses (Views + Unduhan disatukan) per departemen.</p>
 
           <div className="space-y-4 max-h-[480px] overflow-y-auto custom-scrollbar pr-2">
             {divisionStats.map((d) => (
               <div key={d.name} className="space-y-1.5">
                 <div className="flex justify-between items-center text-xs">
                   <span className="font-bold text-slate-800">{d.name}</span>
-                  <span className="font-semibold text-slate-500">{d.count} ({d.progress}%)</span>
+                  <span className="font-semibold text-slate-500">
+                    {d.count} — <span className="font-bold text-[#006194]">{d.progress}%</span>
+                  </span>
                 </div>
                 <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
                   <div
                     className={`h-full rounded-full ${d.color} transition-all duration-1000`}
-                    style={{ width: `${d.progress}%` }}
+                    style={{ width: `${Math.max(d.progress, d.catTotalAccess > 0 ? 2 : 0)}%` }}
                   ></div>
                 </div>
               </div>
