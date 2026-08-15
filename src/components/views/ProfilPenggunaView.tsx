@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { User } from '../../types';
+import { hashPassword, verifyPassword } from '../../utils/cryptoUtils';
 
 interface ProfilPenggunaViewProps {
   currentUser: User;
@@ -50,17 +51,16 @@ export const ProfilPenggunaView: React.FC<ProfilPenggunaViewProps> = ({
     setTimeout(() => setToastMessage(null), 4000);
   };
 
-  const handleSaveProfile = (e: React.FormEvent) => {
+  const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const isChangingPassword = !!(oldPassword || newPassword || confirmPassword || isDefaultPass);
+    let hashedNewPassword = '';
 
     if (isChangingPassword) {
       // 1. Verifikasi Kata Sandi Saat Ini (password123 atau password terbaru)
-      const isValidOldPass =
-        oldPassword === actualCurrentPassword ||
-        oldPassword === 'password123' ||
-        (currentUser.password && oldPassword === currentUser.password);
+      const authOld = await verifyPassword(oldPassword, actualCurrentPassword);
+      const isValidOldPass = authOld.isValid || oldPassword === 'password123';
 
       if (!oldPassword || !isValidOldPass) {
         triggerToast('⚠️ Kata sandi saat ini salah.');
@@ -90,6 +90,8 @@ export const ProfilPenggunaView: React.FC<ProfilPenggunaViewProps> = ({
         triggerToast('⚠️ Konfirmasi kata sandi baru tidak cocok.');
         return;
       }
+
+      hashedNewPassword = await hashPassword(newPassword);
     }
 
     setIsSaving(true);
@@ -105,14 +107,14 @@ export const ProfilPenggunaView: React.FC<ProfilPenggunaViewProps> = ({
           email,
           division,
           avatar: avatarUrl,
-          ...(newPassword ? { password: newPassword, mustChangePassword: false } : {})
+          ...(hashedNewPassword ? { password: hashedNewPassword, mustChangePassword: false } : {})
         });
       }
 
       if (newPassword) {
-        triggerToast('✅ Kata sandi Anda berhasil diperbarui!');
+        triggerToast('✅ Kata sandi Anda berhasil diperbarui dan di-encrypt aman!');
       }
-    }, 800);
+    }, 400);
   };
 
   const handleOpenAvatarModal = () => {

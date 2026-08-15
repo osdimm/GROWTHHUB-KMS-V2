@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { User } from '../../types';
 import { GrowthHubLogo } from '../GrowthHubLogo';
-import { getProfilesFromSupabase } from '../../services/supabaseService';
+import { getProfilesFromSupabase, saveProfileToSupabase } from '../../services/supabaseService';
+import { verifyPassword } from '../../utils/cryptoUtils';
 
 interface LoginPageProps {
   users: User[];
@@ -39,8 +40,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({
       }
     }
 
-    setIsLoading(false);
-    
     // Find matching user by email or fallback by name
     const matchedUser = currentUsersList.find(
       (u) => u.email.toLowerCase() === cleanEmail || u.name.toLowerCase() === cleanEmail
@@ -48,18 +47,36 @@ export const LoginPage: React.FC<LoginPageProps> = ({
 
     if (matchedUser) {
       if (matchedUser.status === 'Nonaktif') {
+        setIsLoading(false);
         setLoginError('Akun ini sedang nonaktif. Silakan hubungi Administrator.');
         return;
       }
 
       const expectedPassword = matchedUser.password || 'password123';
-      if (passwordInput !== expectedPassword) {
+      const authResult = await verifyPassword(passwordInput, expectedPassword);
+
+      if (!authResult.isValid) {
+        setIsLoading(false);
         setLoginError('Kata sandi yang Anda masukkan salah. Silakan periksa kembali kata sandi Anda.');
         return;
       }
 
-      onLoginSuccess(matchedUser);
+      // If user had legacy plain text password, automatically upgrade password to SHA-256 hash in database
+      let finalUser = matchedUser;
+      if (authResult.needsUpgrade && authResult.newHash) {
+        finalUser = {
+          ...matchedUser,
+          password: authResult.newHash
+        };
+        saveProfileToSupabase(finalUser).catch((err) =>
+          console.error('Auto-upgrade hashed password to Supabase failed:', err)
+        );
+      }
+
+      setIsLoading(false);
+      onLoginSuccess(finalUser);
     } else {
+      setIsLoading(false);
       setLoginError('Email tidak ditemukan. Silakan periksa kembali data login Anda.');
     }
   };
