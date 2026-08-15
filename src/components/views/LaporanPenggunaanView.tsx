@@ -60,32 +60,46 @@ export const LaporanPenggunaanView: React.FC<LaporanPenggunaanViewProps> = ({
   ];
 
   // Standard comprehensive list of all company divisions
-  const ALL_DIVISIONS = [
-    'Talent Development',
-    'Learning Center',
-    'Performance & Career',
-    'Organization Development',
-    'Corporate Culture',
-    'Knowledge Management',
-    'HR Operations',
+  const STANDARD_DIVISIONS = [
     'Talent Acquisition',
-    'Employee Relations',
-    'Total Rewards',
-    'People Analytics',
-    'IT & Digital',
-    'Finance & Accounting',
-    'Legal & Compliance',
-    'Marketing & PR',
-    'General Affairs'
+    'Talent Development',
+    'Organizational Development',
+    'Employee Benefit',
+    'Administration',
+    'Graphic Design',
+    'Copywriting',
+    'Content Coordinator',
+    'Video Editor',
+    'Public Relation',
+    'Social Media Officer',
+    'Key Opinion Leader Coordinator',
+    'Representative',
+    'Program Specialist',
+    'Project Representative',
+    'Community & Digital Marketing'
   ];
 
-  // Combine categories prop and ALL_DIVISIONS to guarantee 100% complete division coverage
+  // Dynamically collect all division & category names from articles, handovers, props, and standard list
+  const categoryNamesFromArticles = articles.map((a) => a.category || a.division).filter(Boolean);
+  const divisionNamesFromHandovers = handoverDocs.map((h) => h.division).filter(Boolean);
+  const categoryNamesFromProps = categories.map((c) => c.name).filter(Boolean);
+
   const targetDivisions = Array.from(
     new Set([
-      ...categories.map((c) => c.name),
-      ...ALL_DIVISIONS
+      ...categoryNamesFromProps,
+      ...categoryNamesFromArticles,
+      ...divisionNamesFromHandovers,
+      ...STANDARD_DIVISIONS
     ])
   );
+
+  // Helper for flexible matching (e.g., "Organizational Development" vs "Organization Development")
+  const isMatchDivision = (itemDiv?: string, targetDiv?: string): boolean => {
+    if (!itemDiv || !targetDiv) return false;
+    const cleanItem = itemDiv.trim().toLowerCase().replace(/al\b/g, '');
+    const cleanTarget = targetDiv.trim().toLowerCase().replace(/al\b/g, '');
+    return cleanItem === cleanTarget;
+  };
 
   // Grand Total Access Activity (Views + Downloads combined)
   const grandTotalAccess = totalViews + totalDownloads;
@@ -93,10 +107,10 @@ export const LaporanPenggunaanView: React.FC<LaporanPenggunaanViewProps> = ({
   // Dynamic Division Access Stats (Views + Downloads combined into total access activity)
   const divisionStats = targetDivisions.map((divName, idx) => {
     const catArticles = articles.filter(
-      (a) => a.category && a.category.trim().toLowerCase() === divName.trim().toLowerCase()
+      (a) => isMatchDivision(a.category || a.division, divName)
     );
     const catHandovers = handoverDocs.filter(
-      (h) => h.division && h.division.trim().toLowerCase() === divName.trim().toLowerCase()
+      (h) => isMatchDivision(h.division, divName)
     );
 
     const catViews = catArticles.reduce((acc, a) => acc + (a.views || 0), 0) +
