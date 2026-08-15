@@ -60,7 +60,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
 
       onLoginSuccess(matchedUser);
     } else {
-      setLoginError('Email atau username tidak ditemukan. Silakan periksa kembali data login Anda.');
+      setLoginError('Email tidak ditemukan. Silakan periksa kembali data login Anda.');
     }
   };
 
@@ -94,7 +94,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
           <form className="space-y-4" onSubmit={handleLoginSubmit}>
             <div className="space-y-1.5">
               <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider block" htmlFor="email">
-                Alamat Email / Username
+                Alamat Email
               </label>
               <div className="relative">
                 <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
