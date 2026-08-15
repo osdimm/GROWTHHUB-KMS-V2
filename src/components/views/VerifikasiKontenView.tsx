@@ -326,25 +326,24 @@ export const VerifikasiKontenView: React.FC<VerifikasiKontenViewProps> = ({
 
               {/* File or Link Section */}
               {(() => {
-                const linkUrl =
+                const explicitLinkUrl =
                   selectedDoc.linkUrl ||
-                  selectedDoc.fileUrl ||
                   selectedDoc.articleData?.linkUrl ||
-                  selectedDoc.articleData?.fileUrl ||
-                  (selectedDoc.fileName.startsWith('http') ? selectedDoc.fileName : '');
+                  (selectedDoc.fileName && selectedDoc.fileName.startsWith('http') ? selectedDoc.fileName : '');
 
                 const isLinkUrl =
                   selectedDoc.articleData?.contentType === 'link' ||
                   selectedDoc.articleData?.fileType === 'LINK' ||
-                  selectedDoc.fileName.endsWith('.link') ||
+                  (selectedDoc.fileName && selectedDoc.fileName.endsWith('.link')) ||
                   selectedDoc.fileSize === 'Tautan Eksternal' ||
-                  Boolean(linkUrl);
+                  (Boolean(explicitLinkUrl) && !selectedDoc.fileUrl && !selectedDoc.fileBlob);
 
-                const targetUrl = linkUrl || (selectedDoc.fileName.startsWith('http') ? selectedDoc.fileName : '');
+                const targetUrl = explicitLinkUrl;
+                const fileUrl = selectedDoc.fileUrl || selectedDoc.articleData?.fileUrl;
 
                 if (isLinkUrl) {
                   return (
-                    <div className="bg-indigo-50/70 border border-indigo-200 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div className="bg-indigo-50/70 border border-indigo-200 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-xs">
                           <span className="material-symbols-outlined text-xl">link</span>
@@ -355,7 +354,7 @@ export const VerifikasiKontenView: React.FC<VerifikasiKontenViewProps> = ({
                           </span>
                           {targetUrl ? (
                             <a
-                              href={targetUrl}
+                              href={targetUrl.startsWith('http') ? targetUrl : `https://${targetUrl}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-xs font-bold text-indigo-700 hover:text-indigo-900 hover:underline flex items-center gap-1.5 truncate max-w-full"
@@ -374,7 +373,7 @@ export const VerifikasiKontenView: React.FC<VerifikasiKontenViewProps> = ({
 
                       {targetUrl && (
                         <a
-                          href={targetUrl}
+                          href={targetUrl.startsWith('http') ? targetUrl : `https://${targetUrl}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="w-full sm:w-auto px-4 py-2.5 bg-indigo-600 text-white hover:bg-indigo-700 text-xs font-bold rounded-xl flex items-center justify-center gap-2 shrink-0 transition-colors shadow-sm"
@@ -387,45 +386,128 @@ export const VerifikasiKontenView: React.FC<VerifikasiKontenViewProps> = ({
                   );
                 }
 
+                // FILE TYPE DETECTION FOR PREVIEW
+                const isPdf =
+                  (selectedDoc.fileName && selectedDoc.fileName.toLowerCase().endsWith('.pdf')) ||
+                  selectedDoc.articleData?.fileType === 'PDF' ||
+                  (fileUrl && fileUrl.toLowerCase().includes('.pdf'));
+
+                const isImage =
+                  (selectedDoc.fileName && /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(selectedDoc.fileName)) ||
+                  (fileUrl && /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(fileUrl));
+
                 return (
-                  <div className="bg-sky-50/60 border border-sky-100 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-xl bg-[#006194] text-white flex items-center justify-center shrink-0 shadow-xs">
-                        <span className="material-symbols-outlined text-xl">
-                          {selectedDoc.fileName.endsWith('.pdf') ? 'picture_as_pdf' : 'description'}
-                        </span>
+                  <div className="space-y-3">
+                    {/* File Header Bar & Download Button */}
+                    <div className="bg-sky-50/60 border border-sky-100 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-10 h-10 rounded-xl bg-[#006194] text-white flex items-center justify-center shrink-0 shadow-xs">
+                          <span className="material-symbols-outlined text-xl">
+                            {isPdf ? 'picture_as_pdf' : 'description'}
+                          </span>
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-slate-900 truncate">
+                            {selectedDoc.fileName || selectedDoc.title}
+                          </p>
+                          <p className="text-[11px] text-slate-500 font-medium">
+                            Ukuran Berkas: {selectedDoc.fileSize}
+                          </p>
+                        </div>
                       </div>
-                      <div className="min-w-0">
-                        <p className="text-xs font-bold text-slate-900 truncate">
-                          {selectedDoc.fileName}
-                        </p>
-                        <p className="text-[11px] text-slate-500 font-medium">
-                          Ukuran Berkas: {selectedDoc.fileSize}
-                        </p>
-                      </div>
+
+                      <a
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          downloadDocumentFile({
+                            title: selectedDoc.title,
+                            category: selectedDoc.category,
+                            author: selectedDoc.author,
+                            date: selectedDoc.submitDate,
+                            summary: selectedDoc.description || `Dokumen diajukan oleh ${selectedDoc.author} untuk divisi ${selectedDoc.subDivision}.`,
+                            fileType: selectedDoc.articleData?.fileType || (isPdf ? 'PDF' : 'DOCX'),
+                            fileUrl: fileUrl,
+                            fileBlob: selectedDoc.fileBlob || selectedDoc.articleData?.fileBlob,
+                            linkUrl: selectedDoc.articleData?.linkUrl
+                          });
+                        }}
+                        className="w-full sm:w-auto px-4 py-2.5 bg-[#006194] text-white hover:bg-[#004b73] text-xs font-bold rounded-xl flex items-center justify-center gap-2 shrink-0 transition-colors shadow-sm"
+                      >
+                        <span className="material-symbols-outlined text-base">download</span>
+                        <span>Unduh Dokumen</span>
+                      </a>
                     </div>
 
-                    <a
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        downloadDocumentFile({
-                          title: selectedDoc.title,
-                          category: selectedDoc.category,
-                          author: selectedDoc.author,
-                          date: selectedDoc.submitDate,
-                          summary: selectedDoc.description || `Dokumen diajukan oleh ${selectedDoc.author} untuk divisi ${selectedDoc.subDivision}.`,
-                          fileType: selectedDoc.articleData?.fileType || (selectedDoc.fileName.endsWith('.pdf') ? 'PDF' : 'DOCX'),
-                          fileUrl: selectedDoc.fileUrl || selectedDoc.articleData?.fileUrl,
-                          fileBlob: selectedDoc.fileBlob || selectedDoc.articleData?.fileBlob,
-                          linkUrl: selectedDoc.articleData?.linkUrl
-                        });
-                      }}
-                      className="w-full sm:w-auto px-4 py-2.5 bg-[#006194] text-white hover:bg-[#004b73] text-xs font-bold rounded-xl flex items-center justify-center gap-2 shrink-0 transition-colors shadow-sm"
-                    >
-                      <span className="material-symbols-outlined text-base">download</span>
-                      <span>Unduh Dokumen</span>
-                    </a>
+                    {/* In-Page Interactive File Content Preview */}
+                    <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden bg-slate-50/80 p-3 space-y-2">
+                      <div className="flex items-center justify-between px-1">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                          <span className="material-symbols-outlined text-[#006194] text-sm">visibility</span>
+                          Pratinjau Berkas Dokumen
+                        </span>
+                        <span className="text-[10px] font-extrabold text-[#006194] bg-sky-100 px-2 py-0.5 rounded">
+                          {selectedDoc.articleData?.fileType || (isPdf ? 'PDF' : 'DOCX')}
+                        </span>
+                      </div>
+
+                      {isPdf && fileUrl ? (
+                        <iframe
+                          src={`${fileUrl}#toolbar=0`}
+                          className="w-full h-[320px] border border-slate-200 rounded-lg shadow-inner bg-white"
+                          title="Pratinjau Berkas PDF"
+                        />
+                      ) : isImage && fileUrl ? (
+                        <div className="flex items-center justify-center p-3 bg-white rounded-lg border border-slate-200">
+                          <img
+                            src={fileUrl}
+                            alt={selectedDoc.title}
+                            className="max-h-[320px] max-w-full rounded object-contain"
+                          />
+                        </div>
+                      ) : (
+                        /* Document Reader View (Interactive Document Layout) */
+                        <div className="bg-white rounded-lg shadow-xs border border-slate-200 p-4 sm:p-5 space-y-4 text-slate-800 font-sans">
+                          <div className="border-b border-slate-100 pb-3 flex justify-between items-start gap-3">
+                            <div>
+                              <span className="px-2 py-0.5 bg-[#006194]/10 text-[#006194] text-[10px] font-extrabold rounded uppercase">
+                                {selectedDoc.category} • {selectedDoc.subDivision}
+                              </span>
+                              <h4 className="text-sm font-bold text-slate-900 mt-1 leading-snug">
+                                {selectedDoc.title}
+                              </h4>
+                            </div>
+                            <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 shrink-0">
+                              PENDING VERIFIKASI
+                            </span>
+                          </div>
+
+                          <div className="space-y-3 text-xs leading-relaxed text-slate-700">
+                            <div>
+                              <h5 className="font-bold text-slate-900 uppercase text-[10px] tracking-wide mb-1 flex items-center gap-1 text-[#006194]">
+                                <span className="material-symbols-outlined text-sm">article</span>
+                                Ringkasan Isi Dokumen
+                              </h5>
+                              <p className="p-3 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 leading-relaxed font-serif text-xs italic">
+                                "{selectedDoc.description || `Dokumen panduan operasional diajukan oleh ${selectedDoc.author} untuk divisi ${selectedDoc.subDivision}.`}"
+                              </p>
+                            </div>
+
+                            <div>
+                              <h5 className="font-bold text-slate-900 uppercase text-[10px] tracking-wide mb-1 flex items-center gap-1 text-[#006194]">
+                                <span className="material-symbols-outlined text-sm">assignment</span>
+                                Ketentuan Poin Utama Dokumen
+                              </h5>
+                              <div className="space-y-1.5 text-slate-600 pl-3 border-l-2 border-[#006194]/40 text-[11px]">
+                                <p>1. Pengajuan dokumen ini ditujukan untuk standardisasi operasional divisi <strong>{selectedDoc.subDivision || selectedDoc.category}</strong>.</p>
+                                <p>2. Setelah diverifikasi dan disetujui Manajer, dokumen ini akan otomatis terpublikasi di Knowledge Base.</p>
+                                <p>3. Pengunggah dokumen: <strong>{selectedDoc.author}</strong> ({selectedDoc.submitDate}).</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 );
               })()}
