@@ -664,19 +664,6 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({
                           </span>
                         );
                       })()}
-
-                      {canDeleteArticle(art) && (
-                        <div className="flex items-center gap-0.5 ml-1">
-                          <button
-                            type="button"
-                            onClick={(e) => handleOpenDeleteArticle(art, e)}
-                            className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                            title="Hapus Dokumen"
-                          >
-                            <span className="material-symbols-outlined text-[16px]">delete</span>
-                          </button>
-                        </div>
-                      )}
                     </div>
                   </div>
 
@@ -727,6 +714,17 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({
                         title="Unduh Dokumentasi"
                       >
                         <span className="material-symbols-outlined text-[18px]">download</span>
+                      </button>
+                    )}
+
+                    {canDeleteArticle(art) && (
+                      <button
+                        type="button"
+                        onClick={(e) => handleOpenDeleteArticle(art, e)}
+                        className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                        title="Hapus Dokumen"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">delete</span>
                       </button>
                     )}
                   </div>
