@@ -633,9 +633,34 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({
                             </span>
                           );
                         }
+                        if (effectiveType === 'PDF') {
+                          return (
+                            <span className="px-2.5 py-0.5 bg-rose-100 text-rose-800 border border-rose-200 rounded text-[11px] font-extrabold flex items-center gap-1 shadow-2xs">
+                              <span className="material-symbols-outlined text-[14px]">picture_as_pdf</span>
+                              <span>PDF</span>
+                            </span>
+                          );
+                        }
+                        if (effectiveType === 'PPTX' || effectiveType === 'PPT') {
+                          return (
+                            <span className="px-2.5 py-0.5 bg-amber-100 text-amber-800 border border-amber-200 rounded text-[11px] font-extrabold flex items-center gap-1">
+                              <span className="material-symbols-outlined text-[14px]">slideshow</span>
+                              <span>PPTX</span>
+                            </span>
+                          );
+                        }
+                        if (effectiveType === 'DOCX' || effectiveType === 'DOC') {
+                          return (
+                            <span className="px-2.5 py-0.5 bg-sky-100 text-sky-800 border border-sky-200 rounded text-[11px] font-extrabold flex items-center gap-1">
+                              <span className="material-symbols-outlined text-[14px]">description</span>
+                              <span>DOCX</span>
+                            </span>
+                          );
+                        }
                         return (
-                          <span className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded text-[11px] font-bold">
-                            {effectiveType}
+                          <span className="px-2.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded text-[11px] font-extrabold flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[14px]">article</span>
+                            <span>{effectiveType}</span>
                           </span>
                         );
                       })()}
