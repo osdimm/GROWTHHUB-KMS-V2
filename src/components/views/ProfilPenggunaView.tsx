@@ -503,13 +503,6 @@ export const ProfilPenggunaView: React.FC<ProfilPenggunaViewProps> = ({
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => setShowAvatarModal(false)}
-                  className="px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
-                >
-                  Batal
-                </button>
-                <button
-                  type="button"
                   onClick={handleSaveAvatar}
                   className="px-4 py-2 bg-[#006194] text-white rounded-xl text-xs font-bold hover:bg-[#004b73] transition-all shadow-sm flex items-center gap-1.5"
                 >
