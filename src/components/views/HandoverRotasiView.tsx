@@ -489,15 +489,15 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
               <div>
                 {/* Top Header Row: Left = Divisi (Knowledge Base Category color style), Right = Format File */}
                 <div className="flex items-center justify-between gap-2 mb-3">
-                  {/* Divisi Badge (Kiri Atas) */}
-                  <span className="px-2.5 py-1 bg-sky-100 text-[#006194] font-extrabold text-[10px] rounded-md flex items-center gap-1 border border-sky-200/80 uppercase tracking-wider shadow-2xs">
+                  {/* Divisi Badge (Kiri Atas - Samakan persis dengan Kategori Knowledge Base) */}
+                  <span className="px-2.5 py-0.5 bg-sky-100 dark:bg-sky-950/80 text-[#006194] dark:text-sky-300 font-extrabold text-[11px] rounded-md flex items-center gap-1 border border-sky-200/80 shadow-2xs">
                     <span className="material-symbols-outlined text-[14px]">domain</span>
                     <span>{doc.division}</span>
                   </span>
 
-                  {/* Format File Badge (Kanan Atas) */}
+                  {/* Format File Badge (Kanan Atas - Samakan persis ukurannya) */}
                   <span
-                    className={`px-2.5 py-1 rounded-md text-[10px] uppercase tracking-wider flex items-center gap-1 border ${getBadgeClass(
+                    className={`px-2.5 py-0.5 rounded-md text-[11px] font-extrabold flex items-center gap-1 border ${getBadgeClass(
                       doc.fileType
                     )}`}
                   >

@@ -611,8 +611,9 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({
               >
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <span className="px-2.5 py-1 bg-sky-50 dark:bg-cyan-950/60 text-[#006194] dark:text-cyan-300 border border-sky-200 dark:border-cyan-800/60 rounded-md text-[10px] font-bold uppercase tracking-wider">
-                      {art.contentCategoryName || 'Materi Pelatihan'}
+                    <span className="px-2.5 py-0.5 bg-sky-100 dark:bg-sky-950/80 text-[#006194] dark:text-sky-300 font-extrabold text-[11px] rounded-md flex items-center gap-1 border border-sky-200/80 shadow-2xs">
+                      <span className="material-symbols-outlined text-[14px]">folder</span>
+                      <span>{art.contentCategoryName || 'Materi Pelatihan'}</span>
                     </span>
                     <div className="flex items-center gap-1.5">
                       {(() => {
