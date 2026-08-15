@@ -598,7 +598,40 @@ const formatCleanTaggedMessage = (rawText: string, targetAuthor: string): string
     setNewTopicContent('');
   };
 
-  const commentTree = activeTopic ? buildCommentTree(activeTopic.comments) : [];
+  const rawCommentTree = activeTopic ? buildCommentTree(activeTopic.comments) : [];
+
+  // Filter comment tree nodes when search is active so non-matching messages are excluded
+  const filterCommentNodes = (nodes: CommentTreeNode[], searchStr: string): CommentTreeNode[] => {
+    if (!searchStr) return nodes;
+
+    return nodes
+      .filter((node) => {
+        const textMatch =
+          node.content.toLowerCase().includes(searchStr) ||
+          node.author.toLowerCase().includes(searchStr) ||
+          (node.authorRole && node.authorRole.toLowerCase().includes(searchStr));
+
+        const hasMatchingChild = node.children && filterCommentNodes(node.children, searchStr).length > 0;
+        return textMatch || hasMatchingChild;
+      })
+      .map((node) => ({
+        ...node,
+        children: node.children ? filterCommentNodes(node.children, searchStr) : []
+      }));
+  };
+
+  const topicHeaderMatches = activeTopic ? (
+    activeTopic.title.toLowerCase().includes(query) ||
+    (activeTopic.content && activeTopic.content.toLowerCase().includes(query)) ||
+    activeTopic.author.toLowerCase().includes(query) ||
+    (activeTopic.tags && activeTopic.tags.some((tag) => tag.toLowerCase().includes(query)))
+  ) : false;
+
+  const commentTree = query
+    ? (filterCommentNodes(rawCommentTree, query).length > 0
+        ? filterCommentNodes(rawCommentTree, query)
+        : (topicHeaderMatches ? rawCommentTree : []))
+    : rawCommentTree;
 
   return (
     <div className="space-y-3 lg:h-[calc(100vh-115px)] lg:flex lg:flex-col lg:overflow-hidden">
