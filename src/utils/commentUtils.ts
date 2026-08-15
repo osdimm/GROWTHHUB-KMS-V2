@@ -10,7 +10,7 @@ export interface CommentTreeNode extends ForumComment {
 export const buildCommentTree = (comments: ForumComment[]): CommentTreeNode[] => {
   if (!comments || comments.length === 0) return [];
 
-  // 1. Deduplicate comments by ID and by author+content (excluding soft-deleted comments)
+  // 1. Deduplicate comments strictly by ID (Soft-deleted comments MUST preserve unique ID and parentId)
   const dedupMap = new Map<string, ForumComment>();
   comments.forEach((c) => {
     if (!c.id) return;
@@ -20,27 +20,19 @@ export const buildCommentTree = (comments: ForumComment[]): CommentTreeNode[] =>
       c.content === '[Pesan telah dihapus]';
 
     if (isDeleted) {
-      dedupMap.set(c.id, c);
+      dedupMap.set(c.id, {
+        ...c,
+        isPinned: false
+      });
       return;
     }
 
-    const contentKey = `${c.author.trim().toLowerCase()}:::${c.content.trim().toLowerCase()}`;
-    const existingById = dedupMap.get(c.id);
-    const existingByContent = dedupMap.get(contentKey);
-
-    const existing = existingById || existingByContent;
-    if (existing) {
-      if (!existing.parentId && c.parentId) {
-        dedupMap.set(c.id, c);
-        dedupMap.set(contentKey, c);
-      }
-    } else {
+    if (!dedupMap.has(c.id)) {
       dedupMap.set(c.id, c);
-      dedupMap.set(contentKey, c);
     }
   });
 
-  const uniqueComments = Array.from(new Set(dedupMap.values()));
+  const uniqueComments = Array.from(dedupMap.values());
 
   // 2. Initialize node map (force isPinned to false for soft-deleted comments)
   const map = new Map<string, CommentTreeNode>();

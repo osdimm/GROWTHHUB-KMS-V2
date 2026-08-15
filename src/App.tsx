@@ -1170,6 +1170,7 @@ export default function App() {
                 content: '[Komentar telah dihapus]',
                 isPinned: false
               };
+              saveForumCommentToSupabase(topicId, softDeleted).catch(console.error);
               return softDeleted;
             }
             return c;
