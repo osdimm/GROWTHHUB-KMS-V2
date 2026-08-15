@@ -111,8 +111,6 @@ export const ProfilPenggunaView: React.FC<ProfilPenggunaViewProps> = ({
 
       if (newPassword) {
         triggerToast('✅ Kata sandi Anda berhasil diperbarui!');
-      } else {
-        triggerToast('Informasi profil dan pengaturan akun berhasil disimpan.');
       }
     }, 800);
   };
@@ -147,7 +145,6 @@ export const ProfilPenggunaView: React.FC<ProfilPenggunaViewProps> = ({
       });
     }
     setShowAvatarModal(false);
-    triggerToast('Foto profil berhasil diperbarui!');
   };
 
   const getRoleBadgeStyle = (role: string) => {

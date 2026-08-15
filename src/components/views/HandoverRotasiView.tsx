@@ -173,14 +173,12 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
     const trimmed = newPeriodInput.trim();
     if (!trimmed) return;
     if (periodsList.includes(trimmed)) {
-      triggerToast(`Periode "${trimmed}" sudah terdaftar.`);
       return;
     }
     setPeriodsList((prev) => [...prev, trimmed]);
     setPeriod(trimmed);
     setSelectedPeriod(trimmed);
     setNewPeriodInput('');
-    triggerToast(`Periode rotasi baru "${trimmed}" berhasil ditambahkan.`);
   };
 
   const handleStartEditPeriod = (pName: string) => {
@@ -196,19 +194,16 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
       return;
     }
     if (periodsList.includes(trimmed)) {
-      triggerToast(`Periode "${trimmed}" sudah ada.`);
       return;
     }
     setPeriodsList((prev) => prev.map((p) => (p === oldName ? trimmed : p)));
     if (selectedPeriod === oldName) setSelectedPeriod(trimmed);
     if (period === oldName) setPeriod(trimmed);
     setEditingPeriodOldName(null);
-    triggerToast(`Nama periode "${oldName}" berhasil diubah menjadi "${trimmed}".`);
   };
 
   const handleDeletePeriod = (pName: string) => {
     if (periodsList.length <= 1) {
-      triggerToast('Sistem memerlukan minimal satu periode rotasi.');
       return;
     }
     setPeriodsList((prev) => prev.filter((p) => p !== pName));
@@ -217,7 +212,6 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
       const remaining = periodsList.filter((p) => p !== pName);
       if (remaining.length > 0) setPeriod(remaining[0]);
     }
-    triggerToast(`Periode "${pName}" berhasil dihapus.`);
   };
 
   const handleOpenPreviewHandover = (doc: HandoverDoc) => {
@@ -260,7 +254,6 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
   const handleConfirmDeleteHandover = () => {
     if (!docToDelete) return;
     onDeleteHandover(docToDelete.id);
-    triggerToast(`Dokumen handover "${docToDelete.title}" berhasil dihapus.`);
     if (previewDoc && previewDoc.id === docToDelete.id) {
       setPreviewDoc(null);
     }
@@ -548,7 +541,6 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
                       rel="noopener noreferrer"
                       onClick={(e) => {
                         e.stopPropagation();
-                        triggerToast(`Membuka tautan: ${doc.title}`);
                       }}
                       className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors flex items-center gap-1 font-bold text-xs"
                       title="Buka Tautan Link"
@@ -875,7 +867,6 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => {
-                    triggerToast(`Membuka tautan ${previewDoc.title}...`);
                     setPreviewDoc(null);
                   }}
                   className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 flex items-center gap-2 shadow-sm"

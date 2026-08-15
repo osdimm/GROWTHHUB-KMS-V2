@@ -375,7 +375,6 @@ export const ForumDiskusiView: React.FC<ForumDiskusiViewProps> = ({
     const title = deleteConfirmTopic.title;
     onDeleteTopic(deleteConfirmTopic.id);
     setDeleteConfirmTopic(null);
-    triggerToast(`Topik diskusi "${title}" berhasil dihapus.`);
   };
 
   const query = globalSearch.toLowerCase();
@@ -424,8 +423,6 @@ const formatCleanTaggedMessage = (rawText: string, targetAuthor: string): string
   return body.length > 0 ? `@${targetAuthor} ${body}` : `@${targetAuthor}`;
 };
 
-
-
   const triggerToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
@@ -455,9 +452,6 @@ const formatCleanTaggedMessage = (rawText: string, targetAuthor: string): string
       const targetAuthor = parentCandidate ? parentCandidate.author : taggedName;
 
       finalMainContent = formatCleanTaggedMessage(rawMainText, targetAuthor);
-      triggerToast(`Tanggapan Anda telah dikirim ke @${targetAuthor}.`);
-    } else {
-      triggerToast('Tanggapan Anda telah dipublikasikan.');
     }
 
     const newComment: ForumComment = {
@@ -505,9 +499,6 @@ const formatCleanTaggedMessage = (rawText: string, targetAuthor: string): string
     };
 
     onAddComment(activeTopic.id, newReply);
-
-    // Toast notification for the sender
-    triggerToast(`Balasan Anda berhasil dikirim ke @${targetAuthor}.`);
 
     setInlineReplyText('');
     setActiveReplyId(null);
@@ -567,7 +558,6 @@ const formatCleanTaggedMessage = (rawText: string, targetAuthor: string): string
     setShowNewTopicModal(false);
     setNewTopicTitle('');
     setNewTopicContent('');
-    triggerToast(`Topik baru "${newTopic.title}" berhasil dibuat.`);
   };
 
   const commentTree = activeTopic ? buildCommentTree(activeTopic.comments) : [];

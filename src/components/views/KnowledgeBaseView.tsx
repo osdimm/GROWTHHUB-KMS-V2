@@ -307,9 +307,6 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({
       if (targetLink && targetLink.trim().length > 0) {
         const finalUrl = targetLink.startsWith('http') ? targetLink : `https://${targetLink}`;
         window.open(finalUrl, '_blank', 'noopener,noreferrer');
-        triggerToast(`Membuka tautan eksternal "${art.title}"...`);
-      } else {
-        triggerToast(`⚠️ Tautan URL untuk "${art.title}" tidak tersedia.`);
       }
       return;
     }
@@ -487,7 +484,6 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({
     if (onDeleteArticle) {
       onDeleteArticle(articleToDelete.id);
     }
-    triggerToast(`Dokumen "${articleToDelete.title}" berhasil dihapus.`);
     setArticleToDelete(null);
     setShowDeleteConfirmModal(false);
   };
@@ -694,9 +690,6 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({
                           if (targetUrl && targetUrl.trim().length > 0) {
                             const finalUrl = targetUrl.startsWith('http') ? targetUrl : `https://${targetUrl}`;
                             window.open(finalUrl, '_blank', 'noopener,noreferrer');
-                            triggerToast(`Membuka tautan eksternal "${art.title}"...`);
-                          } else {
-                            triggerToast(`⚠️ Tautan URL untuk "${art.title}" tidak tersedia.`);
                           }
                         }}
                         className="p-1 text-[#006194] dark:text-indigo-400 hover:bg-sky-50 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer flex items-center gap-1 font-bold text-xs"

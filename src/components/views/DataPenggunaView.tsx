@@ -387,7 +387,6 @@ export const DataPenggunaView: React.FC<DataPenggunaViewProps> = ({
     );
 
     if (isDuplicate) {
-      triggerToast(`⚠️ Email "${trimmedEmail}" sudah terdaftar untuk pengguna lain. Data tidak dapat disimpan.`);
       return;
     }
 
@@ -408,14 +407,12 @@ export const DataPenggunaView: React.FC<DataPenggunaViewProps> = ({
       mustChangePassword: false
     });
 
-    triggerToast(`Data profil ${editName} berhasil diperbarui.`);
     setEditUserTarget(null);
   };
 
   const confirmDelete = () => {
     if (!deleteTarget) return;
     onDeleteUser(deleteTarget.id);
-    triggerToast(`Pengguna ${deleteTarget.name} berhasil dihapus.`);
     setDeleteTarget(null);
   };
 
