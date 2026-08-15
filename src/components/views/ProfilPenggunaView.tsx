@@ -230,16 +230,6 @@ export const ProfilPenggunaView: React.FC<ProfilPenggunaViewProps> = ({
           <div className="text-center sm:text-left">
             <h3 className="text-xl font-bold text-slate-900">{name}</h3>
             <p className="text-xs text-slate-500 font-medium">{email}</p>
-            <div className="mt-2.5 flex flex-wrap justify-center sm:justify-start gap-2">
-              <span
-                className={`px-3 py-1 rounded-full text-xs font-extrabold border ${roleBadgeInfo.badgeClass}`}
-              >
-                {roleBadgeInfo.label}
-              </span>
-              <span className="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-xs font-bold border border-slate-200">
-                Divisi: {division}
-              </span>
-            </div>
           </div>
         </div>
 
