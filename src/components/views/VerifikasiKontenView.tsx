@@ -549,9 +549,13 @@ export const VerifikasiKontenView: React.FC<VerifikasiKontenViewProps> = ({
 
       {/* Toast Feedback */}
       {toast && (
-        <div className="fixed bottom-6 right-6 bg-[#1e293b] text-white px-5 py-3.5 rounded-xl shadow-2xl flex items-center gap-3 z-50 animate-in slide-in-from-bottom-5">
-          <span className="material-symbols-outlined text-emerald-400 text-xl">verified</span>
-          <span className="text-xs font-semibold">{toast}</span>
+        <div className="fixed bottom-8 right-8 bg-slate-900/95 dark:bg-slate-800/95 backdrop-blur-md text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3.5 z-50 border border-slate-700/60 max-w-md animate-in slide-in-from-bottom-5 duration-200">
+          {!toast.includes('⚠️') && !toast.includes('❌') && !toast.toLowerCase().includes('salah') && !toast.toLowerCase().includes('gagal') ? (
+            <span className="material-symbols-outlined text-emerald-400 text-2xl shrink-0">check_circle</span>
+          ) : (
+            <span className="material-symbols-outlined text-amber-400 text-2xl shrink-0">info</span>
+          )}
+          <span className="text-sm font-bold leading-relaxed">{toast}</span>
         </div>
       )}
     </div>
