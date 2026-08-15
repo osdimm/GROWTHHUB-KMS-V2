@@ -116,6 +116,7 @@ export interface ForumComment {
   replies?: ForumComment[];
   likes?: number;
   likedBy?: string[];
+  created_at?: string;
 }
 
 export interface ForumTopic {

@@ -5,20 +5,45 @@ export interface CommentTreeNode extends ForumComment {
 }
 
 /**
+ * Helper: Extract stable creation timestamp/sequence score for a comment
+ */
+const getCommentTimeScore = (c: ForumComment): number => {
+  if (c.created_at) {
+    const t = new Date(c.created_at).getTime();
+    if (!isNaN(t) && t > 0) return t;
+  }
+  if (c.id) {
+    const match = c.id.match(/\d{10,}/);
+    if (match) {
+      const num = parseInt(match[0], 10);
+      if (!isNaN(num) && num > 0) return num;
+    }
+    const numMatch = c.id.match(/\d+/);
+    if (numMatch) {
+      const num = parseInt(numMatch[0], 10);
+      if (!isNaN(num) && num > 0) return num;
+    }
+  }
+  return 0;
+};
+
+/**
  * Helper: Convert flat comments array into hierarchical nested tree
  * Guarantees:
  * 1. Pinned comments appear at the top.
  * 2. New root comments (parentId: null/undefined) stay at the VERY BOTTOM.
- * 3. Soft-deleted comments stay in their exact original position in the tree without dropping or jumping.
+ * 3. Soft-deleted comments stay in their EXACT ORIGINAL POSITION in the tree without dropping or jumping.
  */
 export const buildCommentTree = (comments: ForumComment[]): CommentTreeNode[] => {
   if (!comments || comments.length === 0) return [];
 
-  // 1. Record original array index for stable positional order
+  // 1. Record original positional order score for every comment ID
   const orderMap = new Map<string, number>();
   comments.forEach((c, idx) => {
     if (c.id && !orderMap.has(c.id)) {
-      orderMap.set(c.id, idx);
+      const timeScore = getCommentTimeScore(c);
+      const score = timeScore > 0 ? timeScore : idx;
+      orderMap.set(c.id, score);
     }
   });
 
@@ -111,7 +136,7 @@ export const buildCommentTree = (comments: ForumComment[]): CommentTreeNode[] =>
     }
   });
 
-  // 5. Sort children of every node by their original position index
+  // 5. Sort children of every node by their original creation position score
   map.forEach((node) => {
     node.children.sort((a, b) => {
       const idxA = orderMap.get(a.id) ?? 0;
@@ -122,7 +147,7 @@ export const buildCommentTree = (comments: ForumComment[]): CommentTreeNode[] =>
 
   // 6. Filter roots & Sort validRoots:
   // - Pinned comments appear at the VERY TOP.
-  // - Non-pinned root comments remain in their EXACT original order (oldest top, newest at bottom).
+  // - Non-pinned root comments remain in their EXACT original creation order (oldest top, newest at bottom).
   const validRoots = roots.filter((r) => r.isPinned || !childNodeIds.has(r.id));
 
   return validRoots.sort((a, b) => {
