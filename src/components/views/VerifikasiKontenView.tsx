@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { PendingDoc } from '../../types';
 import { downloadDocumentFile } from '../../utils/documentDownloader';
+import { ALL_DIVISIONS } from './KnowledgeBaseView';
 
 interface VerifikasiKontenViewProps {
   pendingDocs: PendingDoc[];
@@ -22,10 +23,22 @@ export const VerifikasiKontenView: React.FC<VerifikasiKontenViewProps> = ({
   currentUserDivision
 }) => {
   const [selectedId, setSelectedId] = useState<string>(pendingDocs[0]?.id || '');
-  const [filterCategory, setFilterCategory] = useState<string>('ALL');
-  const [localSearch, setLocalSearch] = useState<string>('');
+  const [filterCategory, setFilterCategory] = useState<string>('Semua');
+  const [selectedDivisionFilter, setSelectedDivisionFilter] = useState<string>('Semua');
+  const [showDivDropdown, setShowDivDropdown] = useState(false);
+  const divisionDropdownRef = useRef<HTMLDivElement>(null);
   const [verificationNote, setVerificationNote] = useState<string>('');
   const [toast, setToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (divisionDropdownRef.current && !divisionDropdownRef.current.contains(e.target as Node)) {
+        setShowDivDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const query = globalSearch.toLowerCase();
 
@@ -57,12 +70,27 @@ export const VerifikasiKontenView: React.FC<VerifikasiKontenViewProps> = ({
       if (!isDivMatch) return false;
     }
 
-    const matchesCat = filterCategory === 'ALL' || doc.category === filterCategory;
+    // 3. Dropdown Filter Divisi
+    if (selectedDivisionFilter !== 'Semua') {
+      const matchDiv =
+        doc.category.toLowerCase() === selectedDivisionFilter.toLowerCase() ||
+        (doc.subDivision && doc.subDivision.toLowerCase() === selectedDivisionFilter.toLowerCase());
+      if (!matchDiv) return false;
+    }
+
+    // 4. Category Filter Pills
+    if (filterCategory !== 'Semua' && filterCategory !== 'ALL') {
+      const matchCat =
+        doc.category === filterCategory ||
+        doc.contentCategoryName === filterCategory;
+      if (!matchCat) return false;
+    }
+
     const matchesQuery =
       doc.title.toLowerCase().includes(query) ||
       doc.author.toLowerCase().includes(query) ||
       doc.category.toLowerCase().includes(query);
-    return matchesCat && matchesQuery;
+    return matchesQuery;
   });
 
   const selectedDoc = filteredList.find((d) => d.id === selectedId) || filteredList[0];
@@ -100,27 +128,13 @@ export const VerifikasiKontenView: React.FC<VerifikasiKontenViewProps> = ({
     }
   };
 
-  const categories = Array.from(
-    new Set([
-      'ALL',
-      'Talent Acquisition',
-      'Talent Development',
-      'Organizational Development',
-      'Employee Benefit',
-      'Administration',
-      'Graphic Design',
-      'Copywriting',
-      'Content Coordinator',
-      'Video Editor',
-      'Public Relation',
-      'Social Media Officer',
-      'Key Opinion Leader Coordinator',
-      'Representative',
-      'Program Specialist',
-      'Project Representative',
-      'Community & Digital Marketing'
-    ])
-  );
+  const categoryOptions = [
+    'Semua',
+    'Materi Pelatihan',
+    'SOP & Panduan Operasional',
+    'Template & Form Standar',
+    'Kebijakan Perusahaan'
+  ];
 
   return (
     <div className="space-y-6">
@@ -138,12 +152,53 @@ export const VerifikasiKontenView: React.FC<VerifikasiKontenViewProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="bg-sky-50 border border-sky-200 text-[#006194] px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 shadow-sm">
-            <span className="material-symbols-outlined text-[20px]">inventory_2</span>
-            <span>
-              Antrean: {pendingDocs.filter((d) => d.status === 'Menunggu Verifikasi').length} Dokumen Pending
-            </span>
+        <div className="flex flex-col items-start sm:items-end gap-2">
+          <div className="flex items-center gap-3">
+            <div className="bg-sky-50 border border-sky-200 text-[#006194] px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 shadow-sm">
+              <span className="material-symbols-outlined text-[20px]">inventory_2</span>
+              <span>
+                Antrean: {pendingDocs.filter((d) => d.status === 'Menunggu Verifikasi').length} Dokumen Pending
+              </span>
+            </div>
+          </div>
+
+          {/* Dropdown Filter Divisi */}
+          <div className="relative" ref={divisionDropdownRef}>
+            <button
+              type="button"
+              onClick={() => setShowDivDropdown(!showDivDropdown)}
+              className="flex items-center justify-between gap-2 px-4 py-2 bg-white text-slate-800 border border-slate-200 rounded-xl text-xs font-semibold hover:bg-slate-50 transition-all cursor-pointer shadow-xs"
+            >
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-slate-500 text-[18px]">filter_list</span>
+                <span>Divisi: {selectedDivisionFilter}</span>
+              </div>
+              <span className="material-symbols-outlined text-slate-400 text-[16px]">expand_more</span>
+            </button>
+
+            {showDivDropdown && (
+              <div className="absolute right-0 mt-2 w-72 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 p-2 animate-in fade-in duration-150">
+                <div className="max-h-56 overflow-y-auto custom-scrollbar py-1">
+                  {['Semua', ...ALL_DIVISIONS].map((div) => (
+                    <button
+                      key={div}
+                      type="button"
+                      onClick={() => {
+                        setSelectedDivisionFilter(div);
+                        setShowDivDropdown(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                        selectedDivisionFilter === div
+                          ? 'bg-sky-50 text-[#006194] font-bold'
+                          : 'text-slate-700 hover:bg-slate-50'
+                      }`}
+                    >
+                      {div}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -163,15 +218,15 @@ export const VerifikasiKontenView: React.FC<VerifikasiKontenViewProps> = ({
               </span>
             </div>
 
-            {/* Category Filter Chips */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 custom-scrollbar text-[11px] font-semibold">
-              {categories.map((cat, idx) => (
+            {/* Category Filter Pills (Sub-Navigasi Dynamic Tab per Kategori) */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 custom-scrollbar text-[11px] font-semibold">
+              {categoryOptions.map((cat, idx) => (
                 <button
                   key={`cat-verif-${cat}-${idx}`}
                   onClick={() => setFilterCategory(cat)}
-                  className={`px-3 py-1 rounded-lg transition-all whitespace-nowrap shrink-0 ${
+                  className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
                     filterCategory === cat
-                      ? 'bg-[#006194] text-white font-bold shadow-sm'
+                      ? 'bg-[#006194] text-white shadow-sm'
                       : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
                   }`}
                 >
