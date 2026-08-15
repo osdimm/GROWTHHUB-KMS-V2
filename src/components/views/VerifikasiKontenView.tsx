@@ -311,16 +311,21 @@ export const VerifikasiKontenView: React.FC<VerifikasiKontenViewProps> = ({
 
               {/* File or Link Section */}
               {(() => {
+                const linkUrl =
+                  selectedDoc.linkUrl ||
+                  selectedDoc.fileUrl ||
+                  selectedDoc.articleData?.linkUrl ||
+                  selectedDoc.articleData?.fileUrl ||
+                  (selectedDoc.fileName.startsWith('http') ? selectedDoc.fileName : '');
+
                 const isLinkUrl =
                   selectedDoc.articleData?.contentType === 'link' ||
                   selectedDoc.articleData?.fileType === 'LINK' ||
                   selectedDoc.fileName.endsWith('.link') ||
                   selectedDoc.fileSize === 'Tautan Eksternal' ||
-                  Boolean(selectedDoc.articleData?.linkUrl);
+                  Boolean(linkUrl);
 
-                const targetUrl =
-                  selectedDoc.articleData?.linkUrl ||
-                  (selectedDoc.fileName.startsWith('http') ? selectedDoc.fileName : 'https://drive.google.com');
+                const targetUrl = linkUrl || (selectedDoc.fileName.startsWith('http') ? selectedDoc.fileName : '');
 
                 if (isLinkUrl) {
                   return (
@@ -333,28 +338,36 @@ export const VerifikasiKontenView: React.FC<VerifikasiKontenViewProps> = ({
                           <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-800 block">
                             TAUTAN TERHUBUNG (KLIK URL DI BAWAH)
                           </span>
-                          <a
-                            href={targetUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs font-bold text-indigo-700 hover:text-indigo-900 hover:underline flex items-center gap-1.5 truncate max-w-full"
-                            title={`Buka ${targetUrl}`}
-                          >
-                            <span className="truncate">{targetUrl}</span>
-                            <span className="material-symbols-outlined text-sm shrink-0">open_in_new</span>
-                          </a>
+                          {targetUrl ? (
+                            <a
+                              href={targetUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs font-bold text-indigo-700 hover:text-indigo-900 hover:underline flex items-center gap-1.5 truncate max-w-full"
+                              title={`Buka ${targetUrl}`}
+                            >
+                              <span className="truncate">{targetUrl}</span>
+                              <span className="material-symbols-outlined text-sm shrink-0">open_in_new</span>
+                            </a>
+                          ) : (
+                            <span className="text-xs font-semibold text-slate-500 italic">
+                              Tautan URL tidak tersedia
+                            </span>
+                          )}
                         </div>
                       </div>
 
-                      <a
-                        href={targetUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-full sm:w-auto px-4 py-2.5 bg-indigo-600 text-white hover:bg-indigo-700 text-xs font-bold rounded-xl flex items-center justify-center gap-2 shrink-0 transition-colors shadow-sm"
-                      >
-                        <span className="material-symbols-outlined text-base">open_in_new</span>
-                        <span>Buka Tautan</span>
-                      </a>
+                      {targetUrl && (
+                        <a
+                          href={targetUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-full sm:w-auto px-4 py-2.5 bg-indigo-600 text-white hover:bg-indigo-700 text-xs font-bold rounded-xl flex items-center justify-center gap-2 shrink-0 transition-colors shadow-sm"
+                        >
+                          <span className="material-symbols-outlined text-base">open_in_new</span>
+                          <span>Buka Tautan</span>
+                        </a>
+                      )}
                     </div>
                   );
                 }

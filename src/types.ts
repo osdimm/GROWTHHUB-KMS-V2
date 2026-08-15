@@ -162,6 +162,7 @@ export interface PendingDoc {
   status: 'Menunggu Verifikasi' | 'Disetujui' | 'Ditolak';
   articleData?: KnowledgeArticle;
   note?: string;
+  linkUrl?: string;
   fileUrl?: string;
   fileBlob?: File | Blob;
 }

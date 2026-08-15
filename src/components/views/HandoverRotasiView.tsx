@@ -786,15 +786,19 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
               {isLinkDocument(previewDoc) && (
                 <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between gap-2">
                   <span className="text-slate-400 shrink-0">URL Tautan:</span>
-                  <a
-                    href={previewDoc.linkUrl || 'https://drive.google.com'}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-bold text-indigo-700 hover:underline truncate flex items-center gap-1"
-                  >
-                    <span className="truncate">{previewDoc.linkUrl || 'https://drive.google.com'}</span>
-                    <span className="material-symbols-outlined text-xs shrink-0">open_in_new</span>
-                  </a>
+                  {previewDoc.linkUrl || previewDoc.fileUrl ? (
+                    <a
+                      href={previewDoc.linkUrl || previewDoc.fileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-bold text-indigo-700 hover:underline truncate flex items-center gap-1"
+                    >
+                      <span className="truncate">{previewDoc.linkUrl || previewDoc.fileUrl}</span>
+                      <span className="material-symbols-outlined text-xs shrink-0">open_in_new</span>
+                    </a>
+                  ) : (
+                    <span className="text-xs text-slate-400 italic">Tautan URL tidak tersedia</span>
+                  )}
                 </div>
               )}
             </div>

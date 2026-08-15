@@ -387,6 +387,9 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({
       const createdFileBlob = isLinkOnly ? undefined : (selectedFile || undefined);
       const selectedCatObj = contentCategories.find((c) => c.id === newArtContentCategoryId);
 
+      const activeLinkUrl = isLinkOnly ? newArtLinkUrl.trim() : (hasLink ? newArtLinkUrl.trim() : undefined);
+      const activeFileUrl = isLinkOnly ? newArtLinkUrl.trim() : createdFileUrl;
+
       const newArt: KnowledgeArticle = {
         id: `kb-${Date.now()}`,
         title: newArtTitle.trim(),
@@ -405,9 +408,9 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({
         views: 1,
         downloads: 0,
         contentType: finalContentType,
-        linkUrl: isLinkOnly ? newArtLinkUrl.trim() : undefined,
+        linkUrl: activeLinkUrl,
         fileBlob: createdFileBlob,
-        fileUrl: createdFileUrl
+        fileUrl: activeFileUrl
       };
 
       const newPendingDoc: PendingDoc = {
@@ -430,8 +433,9 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({
         tags: [newArtDivision],
         status: 'Menunggu Verifikasi',
         articleData: newArt,
-        fileBlob: createdFileBlob,
-        fileUrl: createdFileUrl
+        linkUrl: activeLinkUrl,
+        fileUrl: activeFileUrl,
+        fileBlob: createdFileBlob
       };
 
       setUploadProgress(100);

@@ -710,11 +710,13 @@ export default function App() {
     );
     savePendingDocToSupabase(updatedDoc).catch(console.error);
 
+    const resolvedLinkUrl = targetDoc.linkUrl || targetDoc.fileUrl || targetDoc.articleData?.linkUrl || targetDoc.articleData?.fileUrl;
     const resolvedFileUrl = targetDoc.fileUrl || targetDoc.articleData?.fileUrl;
 
     const articleToAdd: KnowledgeArticle = targetDoc.articleData
       ? {
           ...targetDoc.articleData,
+          linkUrl: targetDoc.articleData.linkUrl || resolvedLinkUrl,
           fileBlob: targetDoc.articleData.fileBlob || targetDoc.fileBlob,
           fileUrl: resolvedFileUrl
         }
@@ -727,7 +729,8 @@ export default function App() {
           date: targetDoc.submitDate,
           fileType: autoDetectFileType(targetDoc.fileName || targetDoc.title),
           views: 1,
-          contentType: 'file',
+          contentType: targetDoc.fileName.endsWith('.link') || targetDoc.fileSize === 'Tautan Eksternal' ? 'link' : 'file',
+          linkUrl: resolvedLinkUrl,
           fileBlob: targetDoc.fileBlob,
           fileUrl: resolvedFileUrl
         };
