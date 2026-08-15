@@ -487,28 +487,32 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
               className="bg-white border border-slate-200 rounded-2xl p-5 hover:border-[#006194] hover:shadow-md transition-all flex flex-col justify-between cursor-pointer group"
             >
               <div>
-                <div className="flex items-center justify-between mb-3">
-                  <span
-                    className={`px-2.5 py-1 rounded-md text-[10px] uppercase tracking-wider flex items-center gap-1 border ${getBadgeClass(
-                      doc.fileType
-                    )}`}
-                  >
-                    <span className="material-symbols-outlined text-[14px]">
-                      {doc.fileType === 'PDF'
-                        ? 'picture_as_pdf'
-                        : doc.fileType === 'XLSX'
-                        ? 'table_chart'
-                        : doc.fileType === 'PPTX'
-                        ? 'slideshow'
-                        : doc.fileType === 'LINK'
-                        ? 'link'
-                        : 'description'}
+                <div className="flex items-center justify-between gap-2 mb-3">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span
+                      className={`px-2.5 py-1 rounded-md text-[10px] uppercase tracking-wider flex items-center gap-1 border ${getBadgeClass(
+                        doc.fileType
+                      )}`}
+                    >
+                      <span className="material-symbols-outlined text-[14px]">
+                        {doc.fileType === 'PDF'
+                          ? 'picture_as_pdf'
+                          : doc.fileType === 'XLSX'
+                          ? 'table_chart'
+                          : doc.fileType === 'PPTX'
+                          ? 'slideshow'
+                          : doc.fileType === 'LINK'
+                          ? 'link'
+                          : 'description'}
+                      </span>
+                      <span>{doc.fileType}</span>
                     </span>
-                    <span>{doc.fileType} • {doc.fileSize}</span>
-                  </span>
-                  <span className="text-[11px] font-bold text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">
-                    {doc.rotationPeriod}
-                  </span>
+
+                    <span className="px-2.5 py-1 bg-amber-50 text-amber-900 border border-amber-200/80 rounded-md text-[10px] font-extrabold flex items-center gap-1 shadow-2xs">
+                      <span className="material-symbols-outlined text-[13px]">calendar_today</span>
+                      <span>{doc.rotationPeriod}</span>
+                    </span>
+                  </div>
                 </div>
 
                 <h4 className="font-bold text-slate-900 text-base leading-snug line-clamp-2 group-hover:text-[#006194] transition-colors">
@@ -784,7 +788,7 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Format:</span>
-                <span className="font-bold">{getEffectiveFileType(previewDoc)} ({previewDoc.fileSize})</span>
+                <span className="font-bold">{getEffectiveFileType(previewDoc)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Tanggal Unggah:</span>
