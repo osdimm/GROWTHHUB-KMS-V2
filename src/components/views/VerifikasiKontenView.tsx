@@ -43,11 +43,16 @@ export const VerifikasiKontenView: React.FC<VerifikasiKontenViewProps> = ({
   };
 
   const filteredList = pendingDocs.filter((doc) => {
-    // If Manager (not Admin), ONLY show pending docs for THEIR DIVISION!
+    // 1. ONLY show documents that are strictly "Menunggu Verifikasi" (Hide approved/rejected ones)
+    if (doc.status !== 'Menunggu Verifikasi') {
+      return false;
+    }
+
+    // 2. If Manager (not Admin), ONLY show pending docs for THEIR DIVISION!
     if (currentUserRole === 'Manajer') {
       const isDivMatch = currentUserDivision && (
         doc.category.toLowerCase() === currentUserDivision.toLowerCase() ||
-        doc.subDivision.toLowerCase() === currentUserDivision.toLowerCase()
+        (doc.subDivision && doc.subDivision.toLowerCase() === currentUserDivision.toLowerCase())
       );
       if (!isDivMatch) return false;
     }
@@ -60,7 +65,7 @@ export const VerifikasiKontenView: React.FC<VerifikasiKontenViewProps> = ({
     return matchesCat && matchesQuery;
   });
 
-  const selectedDoc = pendingDocs.find((d) => d.id === selectedId) || pendingDocs[0];
+  const selectedDoc = filteredList.find((d) => d.id === selectedId) || filteredList[0];
 
   const triggerToast = (msg: string) => {
     setToast(msg);
@@ -69,20 +74,30 @@ export const VerifikasiKontenView: React.FC<VerifikasiKontenViewProps> = ({
 
   const handleApprove = () => {
     if (!selectedDoc) return;
+    const currentDocId = selectedDoc.id;
     if (onApproveDoc) {
-      onApproveDoc(selectedDoc.id, verificationNote);
+      onApproveDoc(currentDocId, verificationNote);
     }
     triggerToast(`Dokumen "${selectedDoc.title}" berhasil DISETUJUI dan dipublikasikan ke Knowledge Base.`);
     setVerificationNote('');
+    const remaining = filteredList.filter((d) => d.id !== currentDocId);
+    if (remaining.length > 0) {
+      setSelectedId(remaining[0].id);
+    }
   };
 
   const handleReject = () => {
     if (!selectedDoc) return;
+    const currentDocId = selectedDoc.id;
     if (onRejectDoc) {
-      onRejectDoc(selectedDoc.id, verificationNote);
+      onRejectDoc(currentDocId, verificationNote);
     }
     triggerToast(`Dokumen "${selectedDoc.title}" DITOLAK. Notifikasi dikirimkan ke pengunggah.`);
     setVerificationNote('');
+    const remaining = filteredList.filter((d) => d.id !== currentDocId);
+    if (remaining.length > 0) {
+      setSelectedId(remaining[0].id);
+    }
   };
 
   const categories = Array.from(
@@ -464,8 +479,14 @@ export const VerifikasiKontenView: React.FC<VerifikasiKontenViewProps> = ({
               </div>
             </>
           ) : (
-            <div className="py-20 text-center text-slate-400 text-sm">
-              Pilih dokumen dari antrean di sebelah kiri untuk memulai verifikasi.
+            <div className="py-24 text-center space-y-3">
+              <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center mx-auto shadow-sm">
+                <span className="material-symbols-outlined text-3xl">task_alt</span>
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-800 text-sm">Semua Pengajuan Selesai Diverifikasi</h3>
+                <p className="text-xs text-slate-400 mt-1">Tidak ada dokumen baru yang menunggu tindakan verifikasi saat ini.</p>
+              </div>
             </div>
           )}
         </div>
