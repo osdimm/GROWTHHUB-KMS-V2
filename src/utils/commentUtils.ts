@@ -42,10 +42,19 @@ export const buildCommentTree = (comments: ForumComment[]): CommentTreeNode[] =>
 
   const uniqueComments = Array.from(new Set(dedupMap.values()));
 
-  // 2. Initialize node map
+  // 2. Initialize node map (force isPinned to false for soft-deleted comments)
   const map = new Map<string, CommentTreeNode>();
   uniqueComments.forEach((c) => {
-    map.set(c.id, { ...c, children: [] });
+    const isDeleted =
+      c.author === '[Dihapus]' ||
+      c.content === '[Komentar telah dihapus]' ||
+      c.content === '[Pesan telah dihapus]';
+
+    map.set(c.id, {
+      ...c,
+      isPinned: isDeleted ? false : Boolean(c.isPinned),
+      children: []
+    });
   });
 
   // 3. Attach children and track child IDs (Pinned comments are promoted to root)
@@ -56,13 +65,8 @@ export const buildCommentTree = (comments: ForumComment[]): CommentTreeNode[] =>
     const node = map.get(c.id)!;
     let parentFound = false;
 
-    const isDeletedNode =
-      node.author === '[Dihapus]' ||
-      node.content === '[Komentar telah dihapus]' ||
-      node.content === '[Pesan telah dihapus]';
-
-    // PINNED COMMENTS: Promoted directly to top-level root ONLY IF NOT DELETED!
-    if (node.isPinned && !isDeletedNode) {
+    // PINNED COMMENTS: Promoted directly to top-level root (detached from parent if any)
+    if (node.isPinned) {
       roots.push(node);
       return;
     }
@@ -99,17 +103,12 @@ export const buildCommentTree = (comments: ForumComment[]): CommentTreeNode[] =>
     }
   });
 
-  // 4. Filter roots & Sort so active PINNED comments appear at the VERY TOP of the list
-  const validRoots = roots.filter((r) => {
-    const isPinnedActive = r.isPinned && r.author !== '[Dihapus]' && r.content !== '[Komentar telah dihapus]';
-    return isPinnedActive || !childNodeIds.has(r.id);
-  });
+  // 4. Filter roots & Sort so PINNED comments appear at the VERY TOP of the list
+  const validRoots = roots.filter((r) => r.isPinned || !childNodeIds.has(r.id));
 
   return validRoots.sort((a, b) => {
-    const aIsPinned = a.isPinned && a.author !== '[Dihapus]' && a.content !== '[Komentar telah dihapus]';
-    const bIsPinned = b.isPinned && b.author !== '[Dihapus]' && b.content !== '[Komentar telah dihapus]';
-    if (aIsPinned && !bIsPinned) return -1;
-    if (!aIsPinned && bIsPinned) return 1;
+    if (a.isPinned && !b.isPinned) return -1;
+    if (!a.isPinned && b.isPinned) return 1;
     return 0;
   });
 };
