@@ -292,27 +292,6 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({
   const [uploadProgress, setUploadProgress] = useState(0);
 
   const handleOpenPreviewArticle = (art: KnowledgeArticle) => {
-    const isLink = isLinkDocument(art) || art.fileType === 'LINK' || art.contentType === 'link' || Boolean(art.linkUrl);
-    const targetLink = art.linkUrl || art.fileUrl;
-
-    if (isLink) {
-      if (targetLink && targetLink.trim().length > 0) {
-        const finalUrl = targetLink.startsWith('http') ? targetLink : `https://${targetLink}`;
-        window.open(finalUrl, '_blank', 'noopener,noreferrer');
-        triggerToast(`Membuka tautan eksternal "${art.title}"...`);
-      } else {
-        triggerToast(`⚠️ Tautan URL untuk "${art.title}" tidak tersedia.`);
-      }
-
-      // Increment view count directly without opening preview modal
-      const newViews = (art.views || 0) + 1;
-      if (onEditArticle) {
-        onEditArticle(art.id, { views: newViews });
-      }
-      return;
-    }
-
-    // Normal file document: open file preview modal
     const newViews = (art.views || 0) + 1;
     const updatedArt = { ...art, views: newViews };
     setPreviewArticle(updatedArt);
@@ -698,17 +677,19 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({
                       <span className="material-symbols-outlined text-[16px]">visibility</span>
                       {art.views || 0}
                     </span>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDownloadDocument(art);
-                      }}
-                      className="p-1 text-slate-500 hover:text-[#006194] hover:bg-sky-50 rounded-lg transition-colors cursor-pointer"
-                      title="Unduh Dokumentasi"
-                    >
-                      <span className="material-symbols-outlined text-[18px]">download</span>
-                    </button>
+                    {!isLinkDocument(art) && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDownloadDocument(art);
+                        }}
+                        className="p-1 text-slate-500 hover:text-[#006194] hover:bg-sky-50 rounded-lg transition-colors cursor-pointer"
+                        title="Unduh Dokumentasi"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">download</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1122,12 +1103,51 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({
 
             <div className="space-y-4 mb-6">
               <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-2">
-                <span className="material-symbols-outlined text-[#006194] text-lg">visibility</span>
-                Pratinjau Berkas
+                <span className="material-symbols-outlined text-[#006194] text-lg">
+                  {isLinkDocument(previewArticle) ? 'link' : 'visibility'}
+                </span>
+                <span>{isLinkDocument(previewArticle) ? 'Informasi Tautan Eksternal' : 'Pratinjau Berkas'}</span>
               </h4>
 
               <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-950 p-2">
-                {isSpreadsheetFile(previewArticle.fileType, previewArticle.fileUrl) ? (
+                {isLinkDocument(previewArticle) ? (
+                  <div className="bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 rounded-xl p-5 space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md">
+                        <span className="material-symbols-outlined text-2xl">link</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-800 dark:text-indigo-300 block">
+                          Tautan Terhubung Eksternal
+                        </span>
+                        <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                          {previewArticle.title}
+                        </h4>
+                      </div>
+                    </div>
+
+                    <div className="p-3 bg-white dark:bg-slate-900 rounded-lg border border-indigo-100 dark:border-indigo-900 space-y-1">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase block">URL Alamat Tautan</span>
+                      {previewArticle.linkUrl || previewArticle.fileUrl ? (
+                        <a
+                          href={previewArticle.linkUrl || previewArticle.fileUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 truncate"
+                        >
+                          <span className="truncate">{previewArticle.linkUrl || previewArticle.fileUrl}</span>
+                          <span className="material-symbols-outlined text-sm shrink-0">open_in_new</span>
+                        </a>
+                      ) : (
+                        <span className="text-xs text-slate-500 italic">Tautan URL tidak tersedia</span>
+                      )}
+                    </div>
+
+                    <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                      Dokumen ini berupa tautan eksternal yang diunggah oleh <strong>{previewArticle.author}</strong>. Klik tombol <strong>"Buka Tautan Link"</strong> di bawah untuk mengakses sumber daya ini.
+                    </p>
+                  </div>
+                ) : isSpreadsheetFile(previewArticle.fileType, previewArticle.fileUrl) ? (
                   <SpreadsheetPreview
                     fileUrl={previewArticle.fileUrl}
                     fileName={previewArticle.title}
