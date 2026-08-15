@@ -76,10 +76,10 @@ const CommentNodeItem: React.FC<CommentNodeItemProps> = ({
         } ${
           isHighlighted
             ? 'bg-sky-100/90 dark:bg-slate-800 border-cyan-400 dark:border-cyan-400 ring-2 ring-cyan-400 shadow-md'
-            : node.isPinned
-            ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-700/60 ring-1 ring-amber-300/50'
             : isDeleted
             ? 'bg-slate-100/80 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800'
+            : node.isPinned
+            ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-700/60 ring-1 ring-amber-300/50'
             : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/80'
         }`}
       >
@@ -108,7 +108,7 @@ const CommentNodeItem: React.FC<CommentNodeItemProps> = ({
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0">
-            {node.isPinned && (
+            {node.isPinned && !isDeleted && (
               <span className="flex items-center gap-0.5 text-[9px] font-extrabold text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/80 border border-amber-300 dark:border-amber-800 px-1.5 py-0.5 rounded">
                 <span className="material-symbols-outlined text-[10px]">push_pin</span>
                 <span>Disematkan</span>
