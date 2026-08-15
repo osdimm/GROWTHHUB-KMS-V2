@@ -377,7 +377,7 @@ export const ForumDiskusiView: React.FC<ForumDiskusiViewProps> = ({
     setDeleteConfirmTopic(null);
   };
 
-  const query = globalSearch.toLowerCase().trim();
+  const query = globalSearch.toLowerCase();
 
   // Helper: Deep full-text search across Topic Title, Body Content, Author, Tags, Parent Comments, and Child Replies
   const checkTopicMatchesSearch = (t: ForumTopic, searchStr: string): boolean => {
@@ -425,7 +425,11 @@ export const ForumDiskusiView: React.FC<ForumDiskusiViewProps> = ({
     return matchesSearch && matchesDivision;
   });
 
-  const activeTopic = topics.find((t) => t.id === selectedTopicId) || filteredTopics[0] || topics[0];
+  // Pick active topic dynamically from filteredTopics so eliminated topics update the detail view immediately
+  const activeTopic =
+    filteredTopics.find((t) => t.id === selectedTopicId) ||
+    filteredTopics[0] ||
+    null;
 
 // Helper: Cleanly format tagged messages to ensure single @TargetAuthor at front without duplicated author name words
 const formatCleanTaggedMessage = (rawText: string, targetAuthor: string): string => {
@@ -861,8 +865,16 @@ const formatCleanTaggedMessage = (rawText: string, targetAuthor: string): string
               </form>
             </div>
           ) : (
-            <div className="p-12 text-center text-slate-400 text-xs sm:text-sm my-auto">
-              Pilih topik di sebelah kiri untuk melihat thread diskusi.
+            <div className="p-12 text-center text-slate-400 text-xs sm:text-sm my-auto flex flex-col items-center justify-center space-y-3">
+              <span className="material-symbols-outlined text-4xl text-slate-300 dark:text-slate-600">search_off</span>
+              <div>
+                <p className="font-bold text-slate-700 dark:text-slate-200 text-sm">Tidak ada diskusi ditemukan</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5 max-w-xs">
+                  {globalSearch
+                    ? `Tidak ada topik atau balasan pesan yang cocok dengan kata kunci "${globalSearch}".`
+                    : 'Pilih topik di sebelah kiri untuk melihat thread diskusi.'}
+                </p>
+              </div>
             </div>
           )}
         </div>
