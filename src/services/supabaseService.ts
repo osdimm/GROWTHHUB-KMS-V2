@@ -12,7 +12,7 @@ import {
   AppNotification
 } from '../types';
 import { formatBytes, parseBytes } from '../utils/fileTypeHelper';
-import { formatDateToISO, formatDateToIndonesian } from '../utils/dateUtils';
+import { formatDateToISO, formatDateToIndonesian, calculateTimeAgo } from '../utils/dateUtils';
 
 // ================= SUPABASE STORAGE FILE UPLOAD =================
 export const uploadFileToSupabaseStorage = async (file: File | Blob, customFileName?: string): Promise<string | null> => {
@@ -526,7 +526,7 @@ export const getActivitiesFromSupabase = async (): Promise<ActivityLog[] | null>
     userAvatar: a.user_avatar || undefined,
     department: a.department || '',
     action: a.action,
-    timeAgo: a.time_ago || '',
+    timeAgo: calculateTimeAgo(a.created_at),
     status: a.status || 'BERHASIL'
   }));
 };
@@ -539,7 +539,6 @@ export const saveActivityToSupabase = async (activity: ActivityLog) => {
     user_avatar: activity.userAvatar,
     department: activity.department,
     action: activity.action,
-    time_ago: activity.timeAgo,
     status: activity.status
   }).select();
 
