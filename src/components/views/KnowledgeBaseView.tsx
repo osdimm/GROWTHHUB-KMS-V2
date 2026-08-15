@@ -71,16 +71,15 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({
   const isAdmin = currentUserRole === 'Admin';
 
   const canDeleteArticle = (art: KnowledgeArticle) => {
+    // 1. Admin can delete any article
     if (currentUserRole === 'Admin') return true;
-    if (currentUserRole === 'Associate') return false;
 
-    const artDiv = art.division || art.category || '';
-    if (currentUserDivision && artDiv && artDiv.toLowerCase() === currentUserDivision.toLowerCase()) {
-      return true;
-    }
+    // 2. Only the author/contributor who uploaded it can delete their own article
     if (currentUserName && art.author && art.author.toLowerCase() === currentUserName.toLowerCase()) {
       return true;
     }
+
+    // 3. Managers, Associates, or non-authors CANNOT delete articles!
     return false;
   };
 
@@ -1331,13 +1330,9 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({
               </span>
             </div>
 
-            <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mt-2 mb-3">
-              Dokumen Berhasil Dikirim
+            <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-2 mb-3">
+              Dokumen berhasil dikirim dan sedang menunggu verifikasi dari Manajer
             </h3>
-
-            <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-6 max-w-md">
-              Terima kasih atas kontribusi Anda. Dokumen Anda kini sedang dalam proses verifikasi dan menunggu persetujuan dari Manager sebelum dipublikasikan ke Knowledge Base untuk seluruh tim.
-            </p>
 
             <button
               onClick={() => setShowVerificationSuccessModal(false)}
