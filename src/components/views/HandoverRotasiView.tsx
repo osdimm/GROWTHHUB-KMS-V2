@@ -532,17 +532,6 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
               <div className="mt-6 pt-3 border-t border-slate-100 flex items-center justify-between">
                 <div className="flex items-center gap-2 text-[11px] text-slate-400 font-medium">
                   <span>{doc.submitDate}</span>
-                  <span className="text-slate-300">•</span>
-                  <div className="flex items-center gap-2 text-slate-500 font-bold">
-                    <span className="flex items-center gap-0.5" title="Total Dilihat">
-                      <span className="material-symbols-outlined text-[13px] text-slate-400">visibility</span>
-                      {doc.views || 0}
-                    </span>
-                    <span className="flex items-center gap-0.5" title="Total Diunduh">
-                      <span className="material-symbols-outlined text-[13px] text-slate-400">download</span>
-                      {doc.downloads || 0}
-                    </span>
-                  </div>
                 </div>
 
                 <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
