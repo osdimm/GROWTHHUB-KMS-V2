@@ -1167,18 +1167,16 @@ export default function App() {
               const softDeleted: ForumComment = {
                 ...c,
                 author: '[Dihapus]',
-                content: '[Komentar telah dihapus]'
+                content: '[Komentar telah dihapus]',
+                isPinned: false
               };
-              saveForumCommentToSupabase(topicId, softDeleted).catch(console.error);
               return softDeleted;
             }
             return c;
           });
-
           const updatedTopic = {
             ...t,
-            comments: updatedComments,
-            commentCount: updatedComments.length
+            comments: updatedComments
           };
           saveForumTopicToSupabase(updatedTopic).catch(console.error);
           return updatedTopic;
