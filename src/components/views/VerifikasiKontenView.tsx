@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { PendingDoc } from '../../types';
 import { downloadDocumentFile } from '../../utils/documentDownloader';
 import { ALL_DIVISIONS } from './KnowledgeBaseView';
@@ -23,22 +23,9 @@ export const VerifikasiKontenView: React.FC<VerifikasiKontenViewProps> = ({
   currentUserDivision
 }) => {
   const [selectedId, setSelectedId] = useState<string>(pendingDocs[0]?.id || '');
-  const [filterCategory, setFilterCategory] = useState<string>('Semua');
   const [selectedDivisionFilter, setSelectedDivisionFilter] = useState<string>('Semua');
-  const [showDivDropdown, setShowDivDropdown] = useState(false);
-  const divisionDropdownRef = useRef<HTMLDivElement>(null);
   const [verificationNote, setVerificationNote] = useState<string>('');
   const [toast, setToast] = useState<string | null>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (divisionDropdownRef.current && !divisionDropdownRef.current.contains(e.target as Node)) {
-        setShowDivDropdown(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   const query = globalSearch.toLowerCase();
 
@@ -70,20 +57,12 @@ export const VerifikasiKontenView: React.FC<VerifikasiKontenViewProps> = ({
       if (!isDivMatch) return false;
     }
 
-    // 3. Dropdown Filter Divisi
-    if (selectedDivisionFilter !== 'Semua') {
+    // 3. Division Filter (Gaya Forum Diskusi)
+    if (selectedDivisionFilter !== 'Semua' && selectedDivisionFilter !== 'Semua Divisi') {
       const matchDiv =
         doc.category.toLowerCase() === selectedDivisionFilter.toLowerCase() ||
         (doc.subDivision && doc.subDivision.toLowerCase() === selectedDivisionFilter.toLowerCase());
       if (!matchDiv) return false;
-    }
-
-    // 4. Category Filter Pills
-    if (filterCategory !== 'Semua' && filterCategory !== 'ALL') {
-      const matchCat =
-        doc.category === filterCategory ||
-        doc.contentCategoryName === filterCategory;
-      if (!matchCat) return false;
     }
 
     const matchesQuery =
@@ -128,14 +107,6 @@ export const VerifikasiKontenView: React.FC<VerifikasiKontenViewProps> = ({
     }
   };
 
-  const categoryOptions = [
-    'Semua',
-    'Materi Pelatihan',
-    'SOP & Panduan Operasional',
-    'Template & Form Standar',
-    'Kebijakan Perusahaan'
-  ];
-
   return (
     <div className="space-y-6">
       {/* Top Banner Header */}
@@ -152,53 +123,12 @@ export const VerifikasiKontenView: React.FC<VerifikasiKontenViewProps> = ({
           </p>
         </div>
 
-        <div className="flex flex-col items-start sm:items-end gap-2">
-          <div className="flex items-center gap-3">
-            <div className="bg-sky-50 border border-sky-200 text-[#006194] px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 shadow-sm">
-              <span className="material-symbols-outlined text-[20px]">inventory_2</span>
-              <span>
-                Antrean: {pendingDocs.filter((d) => d.status === 'Menunggu Verifikasi').length} Dokumen Pending
-              </span>
-            </div>
-          </div>
-
-          {/* Dropdown Filter Divisi */}
-          <div className="relative" ref={divisionDropdownRef}>
-            <button
-              type="button"
-              onClick={() => setShowDivDropdown(!showDivDropdown)}
-              className="flex items-center justify-between gap-2 px-4 py-2 bg-white text-slate-800 border border-slate-200 rounded-xl text-xs font-semibold hover:bg-slate-50 transition-all cursor-pointer shadow-xs"
-            >
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-slate-500 text-[18px]">filter_list</span>
-                <span>Divisi: {selectedDivisionFilter}</span>
-              </div>
-              <span className="material-symbols-outlined text-slate-400 text-[16px]">expand_more</span>
-            </button>
-
-            {showDivDropdown && (
-              <div className="absolute right-0 mt-2 w-72 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 p-2 animate-in fade-in duration-150">
-                <div className="max-h-56 overflow-y-auto custom-scrollbar py-1">
-                  {['Semua', ...ALL_DIVISIONS].map((div) => (
-                    <button
-                      key={div}
-                      type="button"
-                      onClick={() => {
-                        setSelectedDivisionFilter(div);
-                        setShowDivDropdown(false);
-                      }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
-                        selectedDivisionFilter === div
-                          ? 'bg-sky-50 text-[#006194] font-bold'
-                          : 'text-slate-700 hover:bg-slate-50'
-                      }`}
-                    >
-                      {div}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+        <div className="flex items-center gap-3">
+          <div className="bg-sky-50 border border-sky-200 text-[#006194] px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 shadow-sm">
+            <span className="material-symbols-outlined text-[20px]">inventory_2</span>
+            <span>
+              Antrean: {pendingDocs.filter((d) => d.status === 'Menunggu Verifikasi').length} Dokumen Pending
+            </span>
           </div>
         </div>
       </div>
@@ -218,21 +148,36 @@ export const VerifikasiKontenView: React.FC<VerifikasiKontenViewProps> = ({
               </span>
             </div>
 
-            {/* Category Filter Pills (Sub-Navigasi Dynamic Tab per Kategori) */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 custom-scrollbar text-[11px] font-semibold">
-              {categoryOptions.map((cat, idx) => (
-                <button
-                  key={`cat-verif-${cat}-${idx}`}
-                  onClick={() => setFilterCategory(cat)}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
-                    filterCategory === cat
-                      ? 'bg-[#006194] text-white shadow-sm'
-                      : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
-                  }`}
+            {/* Division Filter Select (Gaya Forum Diskusi) */}
+            <div className="flex items-center gap-2 pt-1">
+              <div className="relative flex-1">
+                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">
+                  filter_alt
+                </span>
+                <select
+                  value={selectedDivisionFilter}
+                  onChange={(e) => setSelectedDivisionFilter(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 focus:ring-1 focus:ring-[#006194] outline-none cursor-pointer shadow-2xs"
                 >
-                  {cat}
+                  <option value="Semua">Semua Divisi</option>
+                  {ALL_DIVISIONS.map((d, idx) => (
+                    <option key={`div-verif-${d}-${idx}`} value={d}>
+                      {d}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {selectedDivisionFilter !== 'Semua' && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedDivisionFilter('Semua')}
+                  className="px-2.5 py-2 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 rounded-xl text-xs font-bold hover:bg-rose-100 transition-colors flex items-center shrink-0 cursor-pointer"
+                  title="Reset Filter Divisi"
+                >
+                  <span className="material-symbols-outlined text-[16px]">close</span>
                 </button>
-              ))}
+              )}
             </div>
           </div>
 
