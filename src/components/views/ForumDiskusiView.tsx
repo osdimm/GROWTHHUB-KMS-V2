@@ -377,13 +377,47 @@ export const ForumDiskusiView: React.FC<ForumDiskusiViewProps> = ({
     setDeleteConfirmTopic(null);
   };
 
-  const query = globalSearch.toLowerCase();
+  const query = globalSearch.toLowerCase().trim();
+
+  // Helper: Deep full-text search across Topic Title, Body Content, Author, Tags, Parent Comments, and Child Replies
+  const checkTopicMatchesSearch = (t: ForumTopic, searchStr: string): boolean => {
+    if (!searchStr) return true;
+
+    // 1. Check Topic Title, Body Content, Author, Category, and Tags
+    if (
+      t.title.toLowerCase().includes(searchStr) ||
+      (t.content && t.content.toLowerCase().includes(searchStr)) ||
+      t.author.toLowerCase().includes(searchStr) ||
+      t.category.toLowerCase().includes(searchStr) ||
+      (t.tags && t.tags.some((tag) => tag.toLowerCase().includes(searchStr)))
+    ) {
+      return true;
+    }
+
+    // 2. Check Parent Comments and Child Replies recursively
+    const checkCommentMatch = (c: ForumComment): boolean => {
+      if (
+        c.content.toLowerCase().includes(searchStr) ||
+        c.author.toLowerCase().includes(searchStr) ||
+        (c.authorRole && c.authorRole.toLowerCase().includes(searchStr))
+      ) {
+        return true;
+      }
+      if (c.replies && c.replies.length > 0) {
+        return c.replies.some(checkCommentMatch);
+      }
+      return false;
+    };
+
+    if (t.comments && t.comments.length > 0) {
+      return t.comments.some(checkCommentMatch);
+    }
+
+    return false;
+  };
+
   const filteredTopics = topics.filter((t) => {
-    const matchesSearch =
-      t.title.toLowerCase().includes(query) ||
-      t.author.toLowerCase().includes(query) ||
-      t.category.toLowerCase().includes(query) ||
-      (t.tags && t.tags.some((tag) => tag.toLowerCase().includes(query)));
+    const matchesSearch = checkTopicMatchesSearch(t, query);
 
     const matchesDivision =
       selectedDivisionFilter === 'Semua Divisi' || t.category === selectedDivisionFilter;
