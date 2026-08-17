@@ -54,7 +54,7 @@ export const ProfilPenggunaView: React.FC<ProfilPenggunaViewProps> = ({
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const isChangingPassword = !!(oldPassword || newPassword || confirmPassword || isDefaultPass);
+    const isChangingPassword = !!(oldPassword || newPassword || confirmPassword);
     let hashedNewPassword = '';
 
     if (isChangingPassword) {
@@ -94,27 +94,23 @@ export const ProfilPenggunaView: React.FC<ProfilPenggunaViewProps> = ({
       hashedNewPassword = await hashPassword(newPassword);
     }
 
-    setIsSaving(true);
-    setTimeout(() => {
-      setIsSaving(false);
-      setOldPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
+    if (onUpdateUser) {
+      onUpdateUser({
+        name,
+        email,
+        division,
+        avatar: avatarUrl,
+        ...(hashedNewPassword ? { password: hashedNewPassword, mustChangePassword: false } : {})
+      });
+    }
 
-      if (onUpdateUser) {
-        onUpdateUser({
-          name,
-          email,
-          division,
-          avatar: avatarUrl,
-          ...(hashedNewPassword ? { password: hashedNewPassword, mustChangePassword: false } : {})
-        });
-      }
+    setOldPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
 
-      if (newPassword) {
-        triggerToast('✅ Kata sandi Anda berhasil diperbarui dan di-encrypt aman!');
-      }
-    }, 400);
+    if (newPassword) {
+      triggerToast('✅ Kata sandi Anda berhasil diperbarui dan di-encrypt aman!');
+    }
   };
 
   const handleOpenAvatarModal = () => {
