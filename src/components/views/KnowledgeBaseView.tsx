@@ -427,6 +427,8 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({
         id: `pv-${Date.now()}`,
         title: newArtTitle.trim(),
         category: newArtDivision,
+        contentCategoryId: newArtContentCategoryId || 'cc-002',
+        contentCategoryName: selectedCatObj?.name || 'Materi Pelatihan',
         author: currentUserName,
         submitDate: new Date().toLocaleDateString('id-ID', {
           day: '2-digit',
@@ -463,7 +465,7 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({
       if (fileInputRef.current) fileInputRef.current.value = '';
       setShowAddArticleModal(false);
 
-      triggerToast(`Dokumen "${newArt.title}" berhasil diunggah ke Knowledge Base.`);
+      triggerToast('Dokumen Berhasil Dikirim');
     } catch (err) {
       console.error('Error creating article:', err);
       setFileError('Gagal memproses dokumen. Silakan coba lagi.');

@@ -469,6 +469,9 @@ export const deleteForumCommentFromSupabase = async (commentId: string) => {
 
 // ================= PENDING DOCS =================
 export const getPendingDocsFromSupabase = async (): Promise<PendingDoc[] | null> => {
+  const { data: catData } = await supabase.from('content_categories').select('*');
+  const catMap = new Map((catData || []).map((c) => [c.id, c.name]));
+
   const { data, error } = await supabase.from('pending_docs').select('*').order('created_at', { ascending: false });
   if (error || !data) return null;
   return data.map((p) => {
@@ -491,7 +494,9 @@ export const getPendingDocsFromSupabase = async (): Promise<PendingDoc[] | null>
       status: p.status || 'Menunggu Verifikasi',
       note: p.note || undefined,
       fileUrl: p.file_url || undefined,
-      linkUrl: extractedLinkUrl
+      linkUrl: extractedLinkUrl,
+      contentCategoryId: p.content_category_id || 'cc-002',
+      contentCategoryName: catMap.get(p.content_category_id) || 'Materi Pelatihan'
     };
   });
 };
@@ -508,7 +513,8 @@ export const savePendingDocToSupabase = async (doc: PendingDoc) => {
     tags: doc.tags,
     status: doc.status,
     note: doc.note,
-    file_url: doc.fileUrl
+    file_url: doc.fileUrl,
+    content_category_id: doc.contentCategoryId || 'cc-002'
   }).select();
 
   if (error) {

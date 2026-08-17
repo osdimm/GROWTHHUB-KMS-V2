@@ -729,9 +729,14 @@ export default function App() {
     const detectedFileType = isDocGenuineLink ? 'LINK' : autoDetectFileType(targetDoc.fileName || targetDoc.title);
     const detectedContentType = isDocGenuineLink ? 'link' : 'file';
 
+    const resolvedCatId = targetDoc.contentCategoryId || targetDoc.articleData?.contentCategoryId || 'cc-002';
+    const resolvedCatName = targetDoc.contentCategoryName || targetDoc.articleData?.contentCategoryName || 'Materi Pelatihan';
+
     const articleToAdd: KnowledgeArticle = targetDoc.articleData
       ? {
           ...targetDoc.articleData,
+          contentCategoryId: targetDoc.articleData.contentCategoryId || resolvedCatId,
+          contentCategoryName: targetDoc.articleData.contentCategoryName || resolvedCatName,
           contentType: detectedContentType,
           fileType: detectedFileType,
           linkUrl: resolvedLinkUrl,
@@ -742,6 +747,8 @@ export default function App() {
           id: `kb-${Date.now()}`,
           title: targetDoc.title,
           category: targetDoc.category,
+          contentCategoryId: resolvedCatId,
+          contentCategoryName: resolvedCatName,
           summary: targetDoc.description || 'Dokumen terverifikasi.',
           author: targetDoc.author,
           date: targetDoc.submitDate,

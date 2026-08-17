@@ -152,6 +152,8 @@ export interface PendingDoc {
   id: string;
   title: string;
   category: string;
+  contentCategoryId?: string;
+  contentCategoryName?: string;
   author: string;
   subDivision?: string;
   submitDate?: string;
