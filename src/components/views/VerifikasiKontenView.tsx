@@ -326,20 +326,27 @@ export const VerifikasiKontenView: React.FC<VerifikasiKontenViewProps> = ({
 
               {/* File or Link Section */}
               {(() => {
+                const rawFileUrl = selectedDoc.fileUrl || selectedDoc.articleData?.fileUrl || '';
+                const isRawFileUrlLink =
+                  rawFileUrl.startsWith('http://') ||
+                  rawFileUrl.startsWith('https://') ?
+                  !rawFileUrl.includes('/storage/v1/object/public/') : false;
+
                 const explicitLinkUrl =
                   selectedDoc.linkUrl ||
                   selectedDoc.articleData?.linkUrl ||
-                  (selectedDoc.fileName && selectedDoc.fileName.startsWith('http') ? selectedDoc.fileName : '');
+                  (selectedDoc.fileName && (selectedDoc.fileName.startsWith('http://') || selectedDoc.fileName.startsWith('https://')) ? selectedDoc.fileName : '') ||
+                  (isRawFileUrlLink ? rawFileUrl : '');
 
                 const isLinkUrl =
+                  Boolean(explicitLinkUrl) ||
                   selectedDoc.articleData?.contentType === 'link' ||
                   selectedDoc.articleData?.fileType === 'LINK' ||
-                  (selectedDoc.fileName && selectedDoc.fileName.endsWith('.link')) ||
-                  selectedDoc.fileSize === 'Tautan Eksternal' ||
-                  (Boolean(explicitLinkUrl) && !selectedDoc.fileUrl && !selectedDoc.fileBlob);
+                  (selectedDoc.fileName && selectedDoc.fileName.toLowerCase().endsWith('.link')) ||
+                  selectedDoc.fileSize === 'Tautan Eksternal';
 
-                const targetUrl = explicitLinkUrl;
-                const fileUrl = selectedDoc.fileUrl || selectedDoc.articleData?.fileUrl;
+                const targetUrl = explicitLinkUrl || (isRawFileUrlLink ? rawFileUrl : '');
+                const fileUrl = rawFileUrl;
 
                 if (isLinkUrl) {
                   return (

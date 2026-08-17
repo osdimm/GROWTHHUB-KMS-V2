@@ -473,6 +473,9 @@ export const getPendingDocsFromSupabase = async (): Promise<PendingDoc[] | null>
   if (error || !data) return null;
   return data.map((p) => {
     const createdDate = p.created_at ? new Date(p.created_at) : new Date();
+    const isExternalLink = p.file_url && (p.file_url.startsWith('http://') || p.file_url.startsWith('https://')) && !p.file_url.includes('/storage/v1/');
+    const extractedLinkUrl = isExternalLink ? p.file_url : (p.file_name && (p.file_name.startsWith('http://') || p.file_name.startsWith('https://')) ? p.file_name : undefined);
+
     return {
       id: p.id,
       title: p.title,
@@ -482,12 +485,13 @@ export const getPendingDocsFromSupabase = async (): Promise<PendingDoc[] | null>
       submitDate: createdDate.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }),
       submitTime: createdDate.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
       fileName: p.file_name || '',
-      fileSize: formatBytes(p.file_size),
+      fileSize: extractedLinkUrl ? 'Tautan Eksternal' : formatBytes(p.file_size),
       description: p.description || '',
       tags: p.tags || [],
       status: p.status || 'Menunggu Verifikasi',
       note: p.note || undefined,
-      fileUrl: p.file_url || undefined
+      fileUrl: p.file_url || undefined,
+      linkUrl: extractedLinkUrl
     };
   });
 };
