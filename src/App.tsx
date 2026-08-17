@@ -710,14 +710,32 @@ export default function App() {
     );
     savePendingDocToSupabase(updatedDoc).catch(console.error);
 
-    const resolvedLinkUrl = targetDoc.linkUrl || targetDoc.fileUrl || targetDoc.articleData?.linkUrl || targetDoc.articleData?.fileUrl;
-    const resolvedFileUrl = targetDoc.fileUrl || targetDoc.articleData?.fileUrl;
+    // Determine if targetDoc is genuinely a Link vs File
+    const isDocGenuineLink =
+      targetDoc.articleData?.contentType === 'link' ||
+      targetDoc.articleData?.fileType === 'LINK' ||
+      targetDoc.fileName.endsWith('.link') ||
+      targetDoc.fileSize === 'Tautan Eksternal' ||
+      Boolean(targetDoc.linkUrl) ||
+      (targetDoc.fileUrl && (targetDoc.fileUrl.startsWith('http://') || targetDoc.fileUrl.startsWith('https://')) && !targetDoc.fileUrl.includes('/storage/v1/'));
+
+    const rawFileUrl = targetDoc.fileUrl || targetDoc.articleData?.fileUrl;
+    const resolvedLinkUrl = isDocGenuineLink
+      ? (targetDoc.linkUrl || targetDoc.articleData?.linkUrl || (targetDoc.fileName.startsWith('http') ? targetDoc.fileName : rawFileUrl))
+      : undefined;
+
+    const resolvedFileUrl = isDocGenuineLink ? undefined : rawFileUrl;
+
+    const detectedFileType = isDocGenuineLink ? 'LINK' : autoDetectFileType(targetDoc.fileName || targetDoc.title);
+    const detectedContentType = isDocGenuineLink ? 'link' : 'file';
 
     const articleToAdd: KnowledgeArticle = targetDoc.articleData
       ? {
           ...targetDoc.articleData,
-          linkUrl: targetDoc.articleData.linkUrl || resolvedLinkUrl,
-          fileBlob: targetDoc.articleData.fileBlob || targetDoc.fileBlob,
+          contentType: detectedContentType,
+          fileType: detectedFileType,
+          linkUrl: resolvedLinkUrl,
+          fileBlob: isDocGenuineLink ? undefined : (targetDoc.articleData.fileBlob || targetDoc.fileBlob),
           fileUrl: resolvedFileUrl
         }
       : {
@@ -727,11 +745,11 @@ export default function App() {
           summary: targetDoc.description || 'Dokumen terverifikasi.',
           author: targetDoc.author,
           date: targetDoc.submitDate,
-          fileType: autoDetectFileType(targetDoc.fileName || targetDoc.title),
+          fileType: detectedFileType,
           views: 1,
-          contentType: targetDoc.fileName.endsWith('.link') || targetDoc.fileSize === 'Tautan Eksternal' ? 'link' : 'file',
+          contentType: detectedContentType,
           linkUrl: resolvedLinkUrl,
-          fileBlob: targetDoc.fileBlob,
+          fileBlob: isDocGenuineLink ? undefined : targetDoc.fileBlob,
           fileUrl: resolvedFileUrl
         };
 
