@@ -42,22 +42,22 @@ export const VerifikasiKontenView: React.FC<VerifikasiKontenViewProps> = ({
     return false;
   };
 
+  // Dynamic list of divisions for the filter dropdown
+  const divisionOptions = Array.from(
+    new Set([
+      ...ALL_DIVISIONS,
+      ...pendingDocs.map((d) => d.category).filter(Boolean),
+      ...pendingDocs.map((d) => d.subDivision).filter((d): d is string => Boolean(d))
+    ])
+  );
+
   const filteredList = pendingDocs.filter((doc) => {
     // 1. ONLY show documents that are strictly "Menunggu Verifikasi" (Hide approved/rejected ones)
     if (doc.status !== 'Menunggu Verifikasi') {
       return false;
     }
 
-    // 2. If Manager (not Admin), ONLY show pending docs for THEIR DIVISION!
-    if (currentUserRole === 'Manajer') {
-      const isDivMatch = currentUserDivision && (
-        doc.category.toLowerCase() === currentUserDivision.toLowerCase() ||
-        (doc.subDivision && doc.subDivision.toLowerCase() === currentUserDivision.toLowerCase())
-      );
-      if (!isDivMatch) return false;
-    }
-
-    // 3. Division Filter (Gaya Forum Diskusi)
+    // 2. Division Filter (Gaya Forum Diskusi)
     if (selectedDivisionFilter !== 'Semua' && selectedDivisionFilter !== 'Semua Divisi') {
       const matchDiv =
         doc.category.toLowerCase() === selectedDivisionFilter.toLowerCase() ||
@@ -160,7 +160,7 @@ export const VerifikasiKontenView: React.FC<VerifikasiKontenViewProps> = ({
                   className="w-full pl-9 pr-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 focus:ring-1 focus:ring-[#006194] outline-none cursor-pointer shadow-2xs"
                 >
                   <option value="Semua">Semua Divisi</option>
-                  {ALL_DIVISIONS.map((d, idx) => (
+                  {divisionOptions.map((d, idx) => (
                     <option key={`div-verif-${d}-${idx}`} value={d}>
                       {d}
                     </option>
