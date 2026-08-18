@@ -972,26 +972,44 @@ export const DataPenggunaView: React.FC<DataPenggunaViewProps> = ({
             </div>
 
             {/* Modal Footer */}
-            <div className="flex items-center justify-between pt-4 mt-3 border-t border-slate-100">
-              <span className="text-xs text-slate-500">
-                {parsedUsers.length > 0
-                  ? `${parsedUsers.filter((u) => u.valid).length} pengguna siap diimpor`
-                  : 'Pilih file Excel/CSV untuk memulai.'}
-              </span>
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={handleConfirmImport}
-                  disabled={parsedUsers.filter((u) => u.valid).length === 0}
-                  className="px-5 py-2 rounded-xl text-xs font-bold bg-emerald-700 text-white hover:bg-emerald-800 disabled:opacity-40 transition-all shadow-sm flex items-center gap-1.5"
-                >
-                  <span className="material-symbols-outlined text-sm">person_add</span>
-                  <span>
-                    Proses & Impor {parsedUsers.filter((u) => u.valid).length} Pengguna
+            {(() => {
+              const hasInvalidUsers = parsedUsers.some((u) => !u.valid);
+              const validUsersCount = parsedUsers.filter((u) => u.valid).length;
+              const isImportDisabled =
+                Boolean(importError) ||
+                parsedUsers.length === 0 ||
+                validUsersCount === 0 ||
+                hasInvalidUsers;
+
+              return (
+                <div className="flex items-center justify-between pt-4 mt-3 border-t border-slate-100">
+                  <span className="text-xs text-slate-500">
+                    {importError ? (
+                      <span className="text-rose-600 font-bold">Format file atau data tidak valid</span>
+                    ) : hasInvalidUsers ? (
+                      <span className="text-rose-600 font-bold">Terdapat data tidak valid dalam berkas</span>
+                    ) : parsedUsers.length > 0 ? (
+                      `${validUsersCount} pengguna siap diimpor`
+                    ) : (
+                      'Pilih file Excel/CSV untuk memulai.'
+                    )}
                   </span>
-                </button>
-              </div>
-            </div>
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={handleConfirmImport}
+                      disabled={isImportDisabled}
+                      className="px-5 py-2 rounded-xl text-xs font-bold bg-emerald-700 text-white hover:bg-emerald-800 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-emerald-700 transition-all shadow-sm flex items-center gap-1.5"
+                    >
+                      <span className="material-symbols-outlined text-sm">person_add</span>
+                      <span>
+                        Proses & Impor {validUsersCount} Pengguna
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}

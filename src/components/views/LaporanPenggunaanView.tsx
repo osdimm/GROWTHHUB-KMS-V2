@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import * as XLSX from 'xlsx';
 import { generateValidPDFBlob } from '../../utils/documentDownloader';
 import { User, KnowledgeArticle, HandoverDoc, CategoryItem } from '../../types';
 
@@ -163,44 +164,52 @@ export const LaporanPenggunaanView: React.FC<LaporanPenggunaanViewProps> = ({
     ];
 
     if (exportFormat === 'Excel') {
-      const filename = `Laporan_Analitik_KMS_GrowthHub_${periodTab.toLowerCase()}_${dateStr}.csv`;
-      
-      // UTF-8 BOM (\uFEFF) ensures Excel correctly recognizes characters and columns
-      let csvContent = '\uFEFF';
-      csvContent += `LAPORAN ANALITIK KMS GROWTH HUB\n`;
-      csvContent += `Periode Laporan;,${periodTab}\n`;
-      csvContent += `Tanggal Dihasilkan;,${nowFormatted}\n`;
-      csvContent += `Diunduh Oleh;,Admin KMS Growth Hub\n\n`;
+      const filename = `Laporan_Analitik_KMS_GrowthHub_${periodTab.toLowerCase()}_${dateStr}.xlsx`;
 
-      csvContent += `1. RINGKASAN METRIK UTAMA PLATFORM\n`;
-      csvContent += `Indikator Metrik;Nilai Terdata;Pertumbuhan;Status\n`;
-      summaryMetrics.forEach((sm) => {
-        csvContent += `"${sm.metric}";"${sm.value}";"${sm.growth}";"${sm.status}"\n`;
-      });
-      csvContent += `\n`;
+      const wb = XLSX.utils.book_new();
 
-      csvContent += `2. KONTRIBUSI AKSES PER DIVISI\n`;
-      csvContent += `Nama Divisi;Jumlah Akses;Persentase Kontribusi;Tingkat Partisipasi\n`;
-      divisionStats.forEach((d) => {
-        csvContent += `"${d.name}";"${d.count}";${d.progress}%;${d.progress >= 80 ? 'Sangat Tinggi' : d.progress >= 70 ? 'Tinggi' : 'Sedang'}\n`;
-      });
-      csvContent += `\n`;
+      // Sheet 1: Ringkasan Metrik Utama
+      const summarySheetData = [
+        ['LAPORAN ANALITIK KMS GROWTH HUB'],
+        ['Periode Evaluasi', periodTab],
+        ['Tanggal Dihasilkan', nowFormatted],
+        ['Diunduh Oleh', 'Administrator KMS Growth Hub'],
+        [],
+        ['1. RINGKASAN METRIK UTAMA PLATFORM'],
+        ['Indikator Metrik', 'Nilai Terdata', 'Pertumbuhan', 'Status Kinerja'],
+        ...summaryMetrics.map((sm) => [sm.metric, sm.value, sm.growth, sm.status])
+      ];
+      const wsSummary = XLSX.utils.aoa_to_sheet(summarySheetData);
+      wsSummary['!cols'] = [{ wch: 35 }, { wch: 25 }, { wch: 25 }, { wch: 20 }];
+      XLSX.utils.book_append_sheet(wb, wsSummary, 'Ringkasan Metrik');
 
-      csvContent += `3. PERINGKAT DOKUMEN PENGETAHUAN TERPOPULER\n`;
-      csvContent += `Peringkat;Judul Dokumen;Kategori Divisi;Jumlah Views;Jumlah Unduhan\n`;
-      popularDocs.forEach((doc) => {
-        csvContent += `#${doc.rank};"${doc.title}";"${doc.category}";${doc.views};${doc.downloads}\n`;
-      });
+      // Sheet 2: Kontribusi Akses Per Divisi
+      const divisionSheetData = [
+        ['2. KONTRIBUSI AKSES PER DIVISI'],
+        ['Nama Divisi / Departemen', 'Jumlah Akses Dokumen', 'Persentase Kontribusi', 'Tingkat Partisipasi'],
+        ...divisionStats.map((d) => [
+          d.name,
+          d.count,
+          `${d.progress}%`,
+          d.progress >= 80 ? 'Sangat Tinggi' : d.progress >= 70 ? 'Tinggi' : 'Sedang'
+        ])
+      ];
+      const wsDivision = XLSX.utils.aoa_to_sheet(divisionSheetData);
+      wsDivision['!cols'] = [{ wch: 35 }, { wch: 45 }, { wch: 22 }, { wch: 22 }];
+      XLSX.utils.book_append_sheet(wb, wsDivision, 'Kontribusi Per Divisi');
 
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      // Sheet 3: Peringkat Dokumen Terpopuler
+      const popularSheetData = [
+        ['3. PERINGKAT DOKUMEN PENGETAHUAN TERPOPULER'],
+        ['Peringkat', 'Judul Dokumen Pengetahuan', 'Kategori Divisi', 'Jumlah Views', 'Jumlah Unduhan'],
+        ...popularDocs.map((doc) => [`#${doc.rank}`, doc.title, doc.category, doc.views, doc.downloads])
+      ];
+      const wsPopular = XLSX.utils.aoa_to_sheet(popularSheetData);
+      wsPopular['!cols'] = [{ wch: 12 }, { wch: 50 }, { wch: 30 }, { wch: 15 }, { wch: 15 }];
+      XLSX.utils.book_append_sheet(wb, wsPopular, 'Dokumen Terpopuler');
+
+      // Download binary xlsx file
+      XLSX.writeFile(wb, filename);
 
       triggerToast(`Laporan format Excel Spreadsheet ("${filename}") berhasil diunduh.`);
     } else {
