@@ -211,7 +211,6 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
     setPeriod(trimmed);
     setSelectedPeriod(trimmed);
     setNewPeriodInput('');
-    triggerToast(`✅ Periode rotasi "${trimmed}" berhasil ditambahkan.`);
   };
 
   const handleStartEditPeriod = (pName: string) => {
@@ -240,7 +239,6 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
     if (selectedPeriod === oldName) setSelectedPeriod(trimmed);
     if (period === oldName) setPeriod(trimmed);
     setEditingPeriodOldName(null);
-    triggerToast(`✅ Periode rotasi berhasil diperbarui menjadi "${trimmed}".`);
   };
 
   const handleDeletePeriod = (pName: string) => {
@@ -254,7 +252,6 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
     if (period === pName) {
       if (updated.length > 0) setPeriod(updated[0]);
     }
-    triggerToast(`✅ Periode rotasi "${pName}" berhasil dihapus.`);
   };
 
   const handleOpenPreviewHandover = (doc: HandoverDoc) => {
@@ -918,32 +915,43 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
               </div>
             )}
 
-            <div className="flex justify-end gap-3">
-              {isLinkDocument(previewDoc) ? (
-                <a
-                  href={previewDoc.linkUrl || '#'}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => {
-                    setPreviewDoc(null);
-                  }}
-                  className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 flex items-center gap-2 shadow-sm"
-                >
-                  <span className="material-symbols-outlined text-base">open_in_new</span>
-                  <span>Buka Tautan Link</span>
-                </a>
-              ) : (
-                <button
-                  onClick={() => {
-                    handleDownloadHandoverDoc(previewDoc);
-                    setPreviewDoc(null);
-                  }}
-                  className="px-5 py-2.5 bg-[#006194] text-white rounded-xl text-xs font-bold hover:bg-[#004b73] flex items-center gap-2"
-                >
-                  <span className="material-symbols-outlined text-base">download</span>
-                  <span>Unduh Dokumen</span>
-                </button>
-              )}
+            <div className="flex justify-between items-center gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={() => setPreviewDoc(null)}
+                className="px-5 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-all flex items-center gap-2 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-base">check_circle</span>
+                <span>Selesai</span>
+              </button>
+
+              <div className="flex items-center gap-3">
+                {isLinkDocument(previewDoc) ? (
+                  <a
+                    href={previewDoc.linkUrl || '#'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => {
+                      setPreviewDoc(null);
+                    }}
+                    className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 flex items-center gap-2 shadow-sm"
+                  >
+                    <span className="material-symbols-outlined text-base">open_in_new</span>
+                    <span>Buka Tautan Link</span>
+                  </a>
+                ) : (
+                  <button
+                    onClick={() => {
+                      handleDownloadHandoverDoc(previewDoc);
+                      setPreviewDoc(null);
+                    }}
+                    className="px-5 py-2.5 bg-[#006194] text-white rounded-xl text-xs font-bold hover:bg-[#004b73] flex items-center gap-2 shadow-sm"
+                  >
+                    <span className="material-symbols-outlined text-base">download</span>
+                    <span>Unduh Dokumen</span>
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>

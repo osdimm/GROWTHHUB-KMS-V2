@@ -241,7 +241,7 @@ const CommentNodeItem: React.FC<CommentNodeItemProps> = ({
               disabled={!inlineReplyText.trim()}
               className="px-3 py-0.5 bg-[#006194] text-white rounded-lg text-[10px] font-bold hover:bg-[#004b73] transition-all disabled:opacity-50"
             >
-              Kirim Balasan
+              Kirim
             </button>
           </div>
         </div>
@@ -898,7 +898,7 @@ const formatCleanTaggedMessage = (rawText: string, targetAuthor: string): string
                     className="px-3.5 py-1.5 bg-[#006194] text-white rounded-xl text-xs font-bold hover:bg-[#004b73] transition-all flex items-center gap-1 shadow-sm"
                   >
                     <span className="material-symbols-outlined text-[15px]">send</span>
-                    <span>Kirim Tanggapan Utama</span>
+                    <span>Kirim Tanggapan</span>
                   </button>
                 </div>
               </form>
@@ -923,14 +923,8 @@ const formatCleanTaggedMessage = (rawText: string, targetAuthor: string): string
       {showNewTopicModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-6">
-            <div className="flex justify-between items-center mb-5">
+            <div className="mb-5">
               <h3 className="text-lg font-bold text-slate-900 dark:text-white">Buat Topik Diskusi Baru</h3>
-              <button
-                onClick={() => setShowNewTopicModal(false)}
-                className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
-              >
-                <span className="material-symbols-outlined">close</span>
-              </button>
             </div>
 
             <form onSubmit={handleCreateTopicSubmit} className="space-y-4">
@@ -971,7 +965,14 @@ const formatCleanTaggedMessage = (rawText: string, targetAuthor: string): string
                 />
               </div>
 
-              <div className="flex justify-end pt-4 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex justify-between items-center pt-4 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setShowNewTopicModal(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                >
+                  Batal
+                </button>
                 <button
                   type="submit"
                   className="px-5 py-2 rounded-xl text-xs font-bold bg-[#006194] text-white hover:bg-[#004b73]"
