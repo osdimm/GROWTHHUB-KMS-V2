@@ -210,8 +210,6 @@ export const LaporanPenggunaanView: React.FC<LaporanPenggunaanViewProps> = ({
 
       // Download binary xlsx file
       XLSX.writeFile(wb, filename);
-
-      triggerToast(`Laporan format Excel Spreadsheet ("${filename}") berhasil diunduh.`);
     } else {
       // PDF Format Export
       const filename = `Laporan_Analitik_KMS_GrowthHub_${periodTab.toLowerCase()}_${dateStr}.pdf`;
@@ -474,8 +472,6 @@ ${popularDocs.map((d) => `${d.rank}. ${d.title} (${d.views} views, ${d.downloads
         `);
         printWindow.document.close();
       }
-
-      triggerToast(`Laporan format PDF ("${filename}") berhasil diunduh.`);
     }
   };
 
@@ -674,17 +670,6 @@ ${popularDocs.map((d) => `${d.rank}. ${d.title} (${d.views} views, ${d.downloads
         </div>
       )}
 
-      {/* Toast */}
-      {toastMessage && (
-        <div className="fixed bottom-8 right-8 bg-slate-900/95 dark:bg-slate-800/95 backdrop-blur-md text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3.5 z-50 border border-slate-700/60 max-w-md animate-in slide-in-from-bottom-5 duration-200">
-          {!toastMessage.includes('⚠️') && !toastMessage.includes('❌') && !toastMessage.toLowerCase().includes('salah') && !toastMessage.toLowerCase().includes('gagal') ? (
-            <span className="material-symbols-outlined text-emerald-400 text-2xl shrink-0">check_circle</span>
-          ) : (
-            <span className="material-symbols-outlined text-amber-400 text-2xl shrink-0">info</span>
-          )}
-          <span className="text-sm font-bold leading-relaxed">{toastMessage}</span>
-        </div>
-      )}
     </div>
   );
 };

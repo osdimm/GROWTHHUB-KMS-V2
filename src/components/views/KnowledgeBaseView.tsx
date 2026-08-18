@@ -200,7 +200,7 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({
     if (!trimmedName) return;
 
     if (contentCategories.some((c) => c.name.trim().toLowerCase() === trimmedName.toLowerCase())) {
-      triggerToast(`⚠️ Nama kategori "${trimmedName}" sudah ada. Silakan gunakan nama lain.`);
+      triggerToast('kategori sudah terdaftar');
       return;
     }
 
@@ -216,7 +216,6 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({
       onAddContentCategory(newCat);
       setNewContentCatName('');
       setNewContentCatDesc('');
-      triggerToast(`Kategori konten baru "${newCat.name}" berhasil ditambahkan.`);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Terjadi kesalahan tidak diketahui';
       triggerToast(`❌ Gagal menambahkan kategori: ${message}`);
@@ -238,7 +237,7 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({
         (c) => c.id !== cat.id && c.name.trim().toLowerCase() === trimmedName.toLowerCase()
       )
     ) {
-      triggerToast(`⚠️ Nama kategori "${trimmedName}" sudah ada. Silakan gunakan nama lain.`);
+      triggerToast('kategori sudah terdaftar');
       return;
     }
 
@@ -254,7 +253,6 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({
         onEditContentCategory(cat.id, { name: trimmedName, description: editingContentCatDesc.trim() });
       }
       setEditingContentCategoryId(null);
-      triggerToast(`Kategori "${trimmedName}" berhasil diperbarui.`);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Terjadi kesalahan tidak diketahui';
       triggerToast(`❌ Gagal mengedit kategori: ${message}`);
@@ -281,7 +279,6 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({
       if (activeContentCategory === cat.name || activeContentCategory === cat.id) {
         setActiveContentCategory('Semua');
       }
-      triggerToast(`Kategori konten "${cat.name}" berhasil dihapus.`);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Terjadi kesalahan tidak diketahui';
       triggerToast(`❌ Gagal menghapus kategori: ${message}`);
