@@ -339,7 +339,7 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
     }
 
     if (!selectedFile) {
-      setFileError('Harap unggah berkas file handover (PDF, DOCX, XLSX, PPTX).');
+      setFileError('Harap Unggah Berkas Handover');
       return;
     }
 
@@ -403,7 +403,7 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
       setLinkUrl('');
       setSelectedFile(null);
       setFileError(null);
-      triggerToast(`Dokumen handover "${newDoc.title}" berhasil disimpan.`);
+      triggerToast('Dokumen Handover Berhasil Disimpan');
     } catch (err) {
       console.error('Failed to upload handover doc:', err);
       setFileError('Gagal mengunggah dokumen handover. Silakan coba lagi.');
@@ -941,7 +941,7 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
                   className="px-5 py-2.5 bg-[#006194] text-white rounded-xl text-xs font-bold hover:bg-[#004b73] flex items-center gap-2"
                 >
                   <span className="material-symbols-outlined text-base">download</span>
-                  <span>Unduh File</span>
+                  <span>Unduh Dokumen</span>
                 </button>
               )}
             </div>
@@ -1125,7 +1125,7 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
                 onClick={handleConfirmDeleteHandover}
                 className="px-5 py-2.5 bg-rose-600 text-white text-xs font-bold rounded-xl hover:bg-rose-700 shadow-sm cursor-pointer"
               >
-                Ya, Hapus Dokumen
+                Ya, Hapus
               </button>
             </div>
           </div>

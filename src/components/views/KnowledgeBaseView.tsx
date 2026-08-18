@@ -1315,7 +1315,7 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({
                     className="px-5 py-2.5 bg-[#006194] text-white rounded-xl text-xs font-bold hover:bg-[#004b73] flex items-center gap-2 shadow-sm"
                   >
                     <span className="material-symbols-outlined text-base">download</span>
-                    <span>Unduh Dokumen</span>
+                    <span>Unduh File</span>
                   </button>
                 )}
               </div>
