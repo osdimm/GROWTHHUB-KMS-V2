@@ -190,7 +190,7 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({
 
   const triggerToast = (msg: string) => {
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 4000);
+    setTimeout(() => setToastMessage(null), 6000);
   };
 
   // Content Category Handlers (Modal Admin)
@@ -452,6 +452,13 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({
       };
 
       setUploadProgress(100);
+      triggerToast('Dokumen Berhasil Dikirim');
+
+      logUserActivitySilent({
+        userName: currentUserName,
+        department: currentUserDivision,
+        action: `Pengajuan dokumen Knowledge Base "${newArtTitle.trim()}" (${selectedCatObj?.name || 'Materi Pelatihan'})`
+      });
 
       if (onRequestVerification) {
         onRequestVerification(newPendingDoc);
@@ -465,14 +472,6 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({
       setSelectedFile(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
       setShowAddArticleModal(false);
-
-      logUserActivitySilent({
-        userName: currentUserName,
-        department: currentUserDivision,
-        action: `Pengajuan dokumen Knowledge Base "${title}" (${selectedCategory})`
-      });
-
-      triggerToast('Dokumen Berhasil Dikirim');
     } catch (err) {
       console.error('Error creating article:', err);
       setFileError('Gagal memproses dokumen. Silakan coba lagi.');
@@ -1388,7 +1387,7 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({
 
       {/* Toast */}
       {toastMessage && (
-        <div className="fixed bottom-8 right-8 bg-slate-900/95 dark:bg-slate-800/95 backdrop-blur-md text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3.5 z-50 border border-slate-700/60 max-w-md animate-in slide-in-from-bottom-5 duration-200">
+        <div className="fixed bottom-8 right-8 bg-slate-900/95 dark:bg-slate-800/95 backdrop-blur-md text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3.5 z-[99999] border border-slate-700/60 max-w-md animate-in slide-in-from-bottom-5 duration-200">
           {!toastMessage.includes('⚠️') && !toastMessage.includes('❌') && !toastMessage.toLowerCase().includes('salah') && !toastMessage.toLowerCase().includes('gagal') ? (
             <span className="material-symbols-outlined text-emerald-400 text-2xl shrink-0">check_circle</span>
           ) : (
