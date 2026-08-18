@@ -172,13 +172,19 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
     e.preventDefault();
     const trimmed = newPeriodInput.trim();
     if (!trimmed) return;
+    if (trimmed.length > 7) {
+      triggerToast('⚠️ Nama periode rotasi maksimal 7 karakter (contoh: "Q3 2026").');
+      return;
+    }
     if (periodsList.includes(trimmed)) {
+      triggerToast(`⚠️ Periode "${trimmed}" sudah ada.`);
       return;
     }
     setPeriodsList((prev) => [...prev, trimmed]);
     setPeriod(trimmed);
     setSelectedPeriod(trimmed);
     setNewPeriodInput('');
+    triggerToast(`✅ Periode rotasi "${trimmed}" berhasil ditambahkan.`);
   };
 
   const handleStartEditPeriod = (pName: string) => {
@@ -189,17 +195,23 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
   const handleSaveEditPeriod = (oldName: string) => {
     const trimmed = editingPeriodNewName.trim();
     if (!trimmed) return;
+    if (trimmed.length > 7) {
+      triggerToast('⚠️ Nama periode rotasi maksimal 7 karakter (contoh: "Q3 2026").');
+      return;
+    }
     if (trimmed === oldName) {
       setEditingPeriodOldName(null);
       return;
     }
     if (periodsList.includes(trimmed)) {
+      triggerToast(`⚠️ Periode "${trimmed}" sudah ada.`);
       return;
     }
     setPeriodsList((prev) => prev.map((p) => (p === oldName ? trimmed : p)));
     if (selectedPeriod === oldName) setSelectedPeriod(trimmed);
     if (period === oldName) setPeriod(trimmed);
     setEditingPeriodOldName(null);
+    triggerToast(`✅ Periode rotasi berhasil diperbarui menjadi "${trimmed}".`);
   };
 
   const handleDeletePeriod = (pName: string) => {
@@ -927,8 +939,9 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
                 <input
                   type="text"
                   value={newPeriodInput}
+                  maxLength={7}
                   onChange={(e) => setNewPeriodInput(e.target.value)}
-                  placeholder="Contoh: Q3 2026 atau Periode Khusus 2026"
+                  placeholder="Contoh: Q3 2026 (maks 7 karakter)"
                   className="flex-1 px-3.5 py-2 bg-white border border-amber-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-amber-400 font-medium"
                 />
                 <button
@@ -965,6 +978,7 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
                           <input
                             type="text"
                             value={editingPeriodNewName}
+                            maxLength={7}
                             onChange={(e) => setEditingPeriodNewName(e.target.value)}
                             className="flex-1 px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-bold outline-none focus:ring-2 focus:ring-[#006194]"
                             autoFocus
