@@ -175,25 +175,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </button>
         </div>
       </div>
-
-      {/* System Toast Notification */}
-      {showToast && (
-        <div className="fixed bottom-6 right-6 bg-[#2d3133] text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 z-50 animate-in slide-in-from-bottom-5 duration-300">
-          <span className="material-symbols-outlined text-emerald-400 text-[24px]">check_circle</span>
-          <div className="pr-4">
-            <p className="text-xs font-bold">Status Sistem</p>
-            <p className="text-[11px] text-slate-300">
-              Dashboard berhasil disinkronkan dengan data terbaru.
-            </p>
-          </div>
-          <button
-            onClick={() => setShowToast(false)}
-            className="text-slate-400 hover:text-white transition-colors"
-          >
-            <span className="material-symbols-outlined text-[18px]">close</span>
-          </button>
-        </div>
-      )}
     </div>
   );
 };

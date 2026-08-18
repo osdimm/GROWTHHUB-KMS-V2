@@ -109,7 +109,7 @@ export const ProfilPenggunaView: React.FC<ProfilPenggunaViewProps> = ({
     setConfirmPassword('');
 
     if (newPassword) {
-      triggerToast('✅ Kata sandi Anda berhasil diperbarui dan di-encrypt aman!');
+      triggerToast('Kata sandi Anda berhasil diperbarui');
     }
   };
 
