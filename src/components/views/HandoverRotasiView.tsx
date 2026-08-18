@@ -202,7 +202,7 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
       return;
     }
     if (periodsList.includes(trimmed)) {
-      triggerToast(`⚠️ Periode "${trimmed}" sudah ada.`);
+      triggerToast('periode sudah terdaftar');
       return;
     }
     const updated = [...periodsList, trimmed];
@@ -231,7 +231,7 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
       return;
     }
     if (periodsList.includes(trimmed)) {
-      triggerToast(`⚠️ Periode "${trimmed}" sudah ada.`);
+      triggerToast('periode sudah terdaftar');
       return;
     }
     const updated = periodsList.map((p) => (p === oldName ? trimmed : p));
