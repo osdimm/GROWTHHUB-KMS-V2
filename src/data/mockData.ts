@@ -13,6 +13,28 @@ import {
 
 export const initialUsers: User[] = [
   {
+    id: 'u-1786602532352-16-ks54',
+    name: 'Prasetyo Ajiiii',
+    email: 'prasetyo.aji@gmail.com',
+    role: 'Admin',
+    division: 'Administration',
+    status: 'Aktif',
+    joinDate: '13 Agu 2026',
+    initials: 'PA',
+    password: 'password123'
+  },
+  {
+    id: 'u-admin-sys',
+    name: 'Admin System',
+    email: 'admin@growthhub.com',
+    role: 'Admin',
+    division: 'Administration',
+    status: 'Aktif',
+    joinDate: '01 Jan 2025',
+    initials: 'AS',
+    password: 'password123'
+  },
+  {
     id: 'u-admin',
     name: 'Dandi Pangestu',
     email: 'dandi.p@gmail.com',

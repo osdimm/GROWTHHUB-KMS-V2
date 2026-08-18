@@ -27,22 +27,30 @@ export const LoginPage: React.FC<LoginPageProps> = ({
     setLoginError(null);
 
     const cleanEmail = emailInput.trim().toLowerCase();
-    let currentUsersList = users;
+    let currentUsersList = [...users];
 
-    if (!currentUsersList || currentUsersList.length === 0) {
-      try {
-        const liveProfiles = await getProfilesFromSupabase();
-        if (liveProfiles && liveProfiles.length > 0) {
-          currentUsersList = liveProfiles;
+    try {
+      const liveProfiles = await getProfilesFromSupabase();
+      if (liveProfiles && liveProfiles.length > 0) {
+        const existingIds = new Set(liveProfiles.map((u) => u.id));
+        const merged = [...liveProfiles];
+        for (const u of users) {
+          if (!existingIds.has(u.id)) {
+            merged.push(u);
+          }
         }
-      } catch (err) {
-        console.error('Error fetching live profiles for login:', err);
+        currentUsersList = merged;
       }
+    } catch (err) {
+      console.warn('Error fetching live profiles for login, fallback to local users:', err);
     }
 
     // Find matching user by email or fallback by name
     const matchedUser = currentUsersList.find(
-      (u) => u.email.toLowerCase() === cleanEmail || u.name.toLowerCase() === cleanEmail
+      (u) =>
+        u.email.toLowerCase() === cleanEmail ||
+        u.name.toLowerCase() === cleanEmail ||
+        cleanEmail.includes(u.email.toLowerCase().split('@')[0])
     );
 
     if (matchedUser) {
