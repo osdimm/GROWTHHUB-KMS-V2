@@ -61,6 +61,7 @@ import { ForumDiskusiView } from './components/views/ForumDiskusiView';
 import { LaporanPenggunaanView } from './components/views/LaporanPenggunaanView';
 import { ProfilPenggunaView } from './components/views/ProfilPenggunaView';
 
+import { initialUsers } from './data/mockData';
 import { autoDetectFileType } from './utils/fileTypeHelper';
 
 // Helpers for safe localStorage setItem to prevent QuotaExceededError crashes
@@ -180,7 +181,7 @@ export default function App() {
   }, [isLoggedIn, activeTab, activeRole, currentUserId]);
 
   // App Centralized State (with localStorage persistence for views & downloads)
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<User[]>(initialUsers);
   const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [contentCategories, setContentCategories] = useState<ContentCategoryItem[]>([]);
 
@@ -304,7 +305,13 @@ export default function App() {
         const dbActivities = results[7].status === 'fulfilled' ? results[7].value : null;
         const dbNotifications = results[8].status === 'fulfilled' ? results[8].value : null;
 
-        if (dbUsers && dbUsers.length > 0) setUsers(dbUsers);
+        if (dbUsers && dbUsers.length > 0) {
+          setUsers((prev) => {
+            const dbIds = new Set(dbUsers.map((u) => u.id));
+            const fallbackOnly = initialUsers.filter((u) => !dbIds.has(u.id));
+            return [...dbUsers, ...fallbackOnly];
+          });
+        }
         if (dbCategories !== null) setCategories(dbCategories);
         if (dbContentCategories !== null && dbContentCategories.length > 0) setContentCategories(dbContentCategories);
 
