@@ -38,16 +38,51 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  // Dynamic Periods State
-  const [periodsList, setPeriodsList] = useState<string[]>([
-    'Q1 2025',
-    'Q2 2025',
-    'Q3 2025',
-    'Q4 2025',
-    'Q1 2026',
-    'Q2 2026'
-  ]);
+  // Dynamic Periods State (with localStorage persistence & automatic Supabase DB merging)
+  const DEFAULT_PERIODS = ['Q1 2025', 'Q2 2025', 'Q3 2025', 'Q4 2025', 'Q1 2026', 'Q2 2026'];
+
+  const [periodsList, setPeriodsList] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('kms_rotation_periods');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {
+      console.error('Error loading kms_rotation_periods:', e);
+    }
+    return DEFAULT_PERIODS;
+  });
   const periods = ['Semua Periode', ...periodsList];
+
+  // Helper to persist periodsList to localStorage
+  const savePeriodsListToCache = (list: string[]) => {
+    try {
+      localStorage.setItem('kms_rotation_periods', JSON.stringify(list));
+    } catch (e) {
+      console.warn('Gagal menyimpan kms_rotation_periods:', e);
+    }
+  };
+
+  // Automatically extract & merge unique rotation_period entries from Supabase DB (handoverDocs)
+  useEffect(() => {
+    if (handoverDocs && handoverDocs.length > 0) {
+      const dbPeriods = handoverDocs
+        .map((d) => d.rotationPeriod)
+        .filter((p): p is string => Boolean(p && p.trim()));
+
+      if (dbPeriods.length > 0) {
+        setPeriodsList((prev) => {
+          const merged = Array.from(new Set([...prev, ...dbPeriods]));
+          if (merged.length !== prev.length || merged.some((val, idx) => val !== prev[idx])) {
+            savePeriodsListToCache(merged);
+            return merged;
+          }
+          return prev;
+        });
+      }
+    }
+  }, [handoverDocs]);
 
   // Admin Period Management Modal State
   const [showManagePeriodsModal, setShowManagePeriodsModal] = useState(false);
@@ -138,28 +173,18 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
   const query = globalSearch.toLowerCase();
 
   const filteredDocs = handoverDocs.filter((doc) => {
-    // Rule 1: Handover Rotasi Visibility by Uploader Role (PRIMARY FILTER):
-    // - Admin: can view ALL handover docs across all roles.
-    // - Non-Admin (Manajer, Karyawan, Associate): currentUser CAN ONLY view handover docs whose authorRole matches currentUserRole EXACTLY. Division does NOT grant access!
-    if (currentUserRole !== 'Admin') {
-      const docRole = doc.authorRole || (doc.author?.toLowerCase().includes('manajer') ? 'Manajer' : 'Karyawan');
-      if (docRole !== currentUserRole) {
-        return false;
-      }
-    }
-
     const matchesSearch =
+      !query ||
       doc.title.toLowerCase().includes(query) ||
+      doc.author.toLowerCase().includes(query) ||
       doc.division.toLowerCase().includes(query) ||
-      (doc.author && doc.author.toLowerCase().includes(query));
+      (doc.description && doc.description.toLowerCase().includes(query));
 
+    const matchesDivision = selectedDivision === 'Semua' || doc.division === selectedDivision;
     const matchesPeriod =
       selectedPeriod === 'Semua Periode' || doc.rotationPeriod === selectedPeriod;
 
-    const matchesDivision =
-      selectedDivision === 'Semua' || doc.division === selectedDivision;
-
-    return matchesSearch && matchesPeriod && matchesDivision;
+    return matchesSearch && matchesDivision && matchesPeriod;
   });
 
   const triggerToast = (msg: string) => {
@@ -180,7 +205,9 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
       triggerToast(`⚠️ Periode "${trimmed}" sudah ada.`);
       return;
     }
-    setPeriodsList((prev) => [...prev, trimmed]);
+    const updated = [...periodsList, trimmed];
+    setPeriodsList(updated);
+    savePeriodsListToCache(updated);
     setPeriod(trimmed);
     setSelectedPeriod(trimmed);
     setNewPeriodInput('');
@@ -207,7 +234,9 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
       triggerToast(`⚠️ Periode "${trimmed}" sudah ada.`);
       return;
     }
-    setPeriodsList((prev) => prev.map((p) => (p === oldName ? trimmed : p)));
+    const updated = periodsList.map((p) => (p === oldName ? trimmed : p));
+    setPeriodsList(updated);
+    savePeriodsListToCache(updated);
     if (selectedPeriod === oldName) setSelectedPeriod(trimmed);
     if (period === oldName) setPeriod(trimmed);
     setEditingPeriodOldName(null);
@@ -218,12 +247,14 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
     if (periodsList.length <= 1) {
       return;
     }
-    setPeriodsList((prev) => prev.filter((p) => p !== pName));
+    const updated = periodsList.filter((p) => p !== pName);
+    setPeriodsList(updated);
+    savePeriodsListToCache(updated);
     if (selectedPeriod === pName) setSelectedPeriod('Semua Periode');
     if (period === pName) {
-      const remaining = periodsList.filter((p) => p !== pName);
-      if (remaining.length > 0) setPeriod(remaining[0]);
+      if (updated.length > 0) setPeriod(updated[0]);
     }
+    triggerToast(`✅ Periode rotasi "${pName}" berhasil dihapus.`);
   };
 
   const handleOpenPreviewHandover = (doc: HandoverDoc) => {
