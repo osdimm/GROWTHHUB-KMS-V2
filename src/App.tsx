@@ -42,7 +42,8 @@ import {
   saveActivityToSupabase,
   getNotificationsFromSupabase,
   saveNotificationToSupabase,
-  deleteNotificationFromSupabase
+  deleteNotificationFromSupabase,
+  logUserActivitySilent
 } from './services/supabaseService';
 
 import { Sidebar } from './components/Sidebar';
@@ -1531,6 +1532,15 @@ export default function App() {
         isOpen={showLogoutModal}
         onClose={() => setShowLogoutModal(false)}
         onConfirm={() => {
+          if (currentUser) {
+            logUserActivitySilent({
+              userName: currentUser.name,
+              userInitials: currentUser.initials,
+              userAvatar: currentUser.avatar,
+              department: currentUser.division,
+              action: `Pengguna keluar dari sistem (Logout)`
+            });
+          }
           setShowLogoutModal(false);
           setIsLoggedIn(false);
           sessionStorage.removeItem('kms_is_logged_in');

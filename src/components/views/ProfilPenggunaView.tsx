@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { User } from '../../types';
 import { hashPassword, verifyPassword } from '../../utils/cryptoUtils';
+import { logUserActivitySilent } from '../../services/supabaseService';
 
 interface ProfilPenggunaViewProps {
   currentUser: User;
@@ -103,6 +104,13 @@ export const ProfilPenggunaView: React.FC<ProfilPenggunaViewProps> = ({
         ...(hashedNewPassword ? { password: hashedNewPassword, mustChangePassword: false } : {})
       });
     }
+
+    logUserActivitySilent({
+      userName: name,
+      userAvatar: avatarUrl,
+      department: division,
+      action: newPassword ? 'Memperbarui kata sandi profil pengguna' : 'Memperbarui data nama & profil pengguna'
+    });
 
     setOldPassword('');
     setNewPassword('');

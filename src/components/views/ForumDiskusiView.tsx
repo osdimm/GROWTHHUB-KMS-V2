@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ForumTopic, ForumComment, CategoryItem } from '../../types';
 import { CustomSelect } from '../CustomSelect';
 import { buildCommentTree, CommentTreeNode } from '../../utils/commentUtils';
+import { logUserActivitySilent } from '../../services/supabaseService';
 
 interface ForumDiskusiViewProps {
   topics: ForumTopic[];
@@ -592,6 +593,11 @@ const formatCleanTaggedMessage = (rawText: string, targetAuthor: string): string
     };
 
     onAddTopic(newTopic);
+    logUserActivitySilent({
+      userName: currentUserName,
+      department: newTopicCategory,
+      action: `Membuat topik forum diskusi baru "${newTopic.title}" (${newTopicCategory})`
+    });
     setSelectedTopicId(newTopic.id);
     setShowNewTopicModal(false);
     setNewTopicTitle('');

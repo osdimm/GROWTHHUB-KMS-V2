@@ -541,6 +541,40 @@ export const getActivitiesFromSupabase = async (): Promise<ActivityLog[] | null>
   }));
 };
 
+export const logUserActivitySilent = async (params: {
+  userName: string;
+  userInitials?: string;
+  userAvatar?: string;
+  department?: string;
+  action: string;
+  status?: string;
+}) => {
+  try {
+    const actId = `act-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+    const nameStr = params.userName || 'Pengguna';
+    const initials =
+      params.userInitials ||
+      nameStr
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .substring(0, 2)
+        .toUpperCase();
+
+    await supabase.from('activity_logs').insert({
+      id: actId,
+      user_name: nameStr,
+      user_initials: initials,
+      user_avatar: params.userAvatar || null,
+      department: params.department || 'Administration',
+      action: params.action,
+      status: params.status || 'BERHASIL'
+    });
+  } catch (err) {
+    console.warn('Silent activity logging exception:', err);
+  }
+};
+
 export const saveActivityToSupabase = async (activity: ActivityLog) => {
   const { data, error } = await supabase.from('activity_logs').upsert({
     id: activity.id,
@@ -553,9 +587,7 @@ export const saveActivityToSupabase = async (activity: ActivityLog) => {
   }).select();
 
   if (error) {
-    console.error('Gagal simpan activity ke Supabase:', error);
-    alert(`❌ GAGAL simpan log aktivitas ke database Supabase:\n[Code: ${error.code || 'UNKNOWN'}] ${error.message}`);
-    throw error;
+    console.warn('Gagal simpan activity ke Supabase:', error.message);
   }
   return data;
 };

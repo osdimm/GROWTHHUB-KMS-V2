@@ -59,6 +59,8 @@ export const HakAksesView: React.FC<HakAksesViewProps> = ({
 
   const handleRoleChange = (userId: string, userName: string, newRole: UserRole) => {
     onUpdateUserRole(userId, newRole);
+    setToastMsg('Peran berhasil diperbarui');
+    setTimeout(() => setToastMsg(null), 4000);
   };
 
   return (

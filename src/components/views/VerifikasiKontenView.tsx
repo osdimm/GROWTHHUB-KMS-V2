@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { PendingDoc } from '../../types';
 import { downloadDocumentFile } from '../../utils/documentDownloader';
 import { ALL_DIVISIONS } from './KnowledgeBaseView';
+import { logUserActivitySilent } from '../../services/supabaseService';
 
 interface VerifikasiKontenViewProps {
   pendingDocs: PendingDoc[];
@@ -85,6 +86,11 @@ export const VerifikasiKontenView: React.FC<VerifikasiKontenViewProps> = ({
     if (onApproveDoc) {
       onApproveDoc(currentDocId, verificationNote);
     }
+    logUserActivitySilent({
+      userName: currentUserName,
+      department: currentUserDivision,
+      action: `Menyetujui & mempublikasikan dokumen pending "${selectedDoc.title}"`
+    });
     triggerToast(`Dokumen "${selectedDoc.title}" berhasil DISETUJUI dan dipublikasikan ke Knowledge Base.`);
     setVerificationNote('');
     const remaining = filteredList.filter((d) => d.id !== currentDocId);
@@ -99,6 +105,11 @@ export const VerifikasiKontenView: React.FC<VerifikasiKontenViewProps> = ({
     if (onRejectDoc) {
       onRejectDoc(currentDocId, verificationNote);
     }
+    logUserActivitySilent({
+      userName: currentUserName,
+      department: currentUserDivision,
+      action: `Menolak pengajuan dokumen pending "${selectedDoc.title}"`
+    });
     triggerToast(`Dokumen "${selectedDoc.title}" DITOLAK. Notifikasi dikirimkan ke pengunggah.`);
     setVerificationNote('');
     const remaining = filteredList.filter((d) => d.id !== currentDocId);

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { HandoverDoc } from '../../types';
 import { downloadDocumentFile, readFileAsDataURL } from '../../utils/documentDownloader';
-import { uploadFileToSupabaseStorage } from '../../services/supabaseService';
+import { uploadFileToSupabaseStorage, logUserActivitySilent } from '../../services/supabaseService';
 import { CustomSelect } from '../CustomSelect';
 import { SpreadsheetPreview } from '../SpreadsheetPreview';
 import { isSpreadsheetFile, isPdfFile, isImageFile, isLinkDocument, getEffectiveFileType, autoDetectFileType } from '../../utils/fileTypeHelper';
@@ -264,6 +264,11 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
     if (onEditHandoverDoc) {
       onEditHandoverDoc(doc.id, { views: newViews });
     }
+    logUserActivitySilent({
+      userName: currentUserName,
+      department: currentUserDivision,
+      action: `Melihat pratinjau dokumen handover "${doc.title}"`
+    });
   };
 
   const handleDownloadHandoverDoc = (doc: HandoverDoc) => {
@@ -274,6 +279,11 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
     if (previewDoc && previewDoc.id === doc.id) {
       setPreviewDoc({ ...previewDoc, downloads: newDownloads });
     }
+    logUserActivitySilent({
+      userName: currentUserName,
+      department: currentUserDivision,
+      action: `Mengunduh berkas dokumen handover "${doc.title}"`
+    });
     downloadDocumentFile({
       title: doc.title,
       category: doc.division,
@@ -382,6 +392,11 @@ export const HandoverRotasiView: React.FC<HandoverRotasiViewProps> = ({
 
       setUploadProgress(100);
       onAddHandover(newDoc);
+      logUserActivitySilent({
+        userName: currentUserName,
+        department: currentUserDivision,
+        action: `Mengunggah dokumen handover "${newDoc.title}" divisi ${division} periode ${period}`
+      });
       setShowUploadModal(false);
       setTitle('');
       setDescription('');

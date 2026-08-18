@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { User } from '../../types';
 import { GrowthHubLogo } from '../GrowthHubLogo';
-import { getProfilesFromSupabase, saveProfileToSupabase } from '../../services/supabaseService';
+import { getProfilesFromSupabase, saveProfileToSupabase, logUserActivitySilent } from '../../services/supabaseService';
 import { verifyPassword } from '../../utils/cryptoUtils';
 
 interface LoginPageProps {
@@ -80,6 +80,15 @@ export const LoginPage: React.FC<LoginPageProps> = ({
           console.error('Auto-upgrade hashed password to Supabase failed:', err)
         );
       }
+
+      // Log user activity silently to DB
+      logUserActivitySilent({
+        userName: finalUser.name,
+        userInitials: finalUser.initials,
+        userAvatar: finalUser.avatar,
+        department: finalUser.division,
+        action: `Pengguna berhasil login ke sistem (Role: ${finalUser.role})`
+      });
 
       setIsLoading(false);
       onLoginSuccess(finalUser);

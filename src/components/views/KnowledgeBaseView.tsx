@@ -4,7 +4,8 @@ import { downloadDocumentFile, readFileAsDataURL } from '../../utils/documentDow
 import {
   uploadFileToSupabaseStorage,
   saveContentCategoryToSupabase,
-  deleteContentCategoryFromSupabase
+  deleteContentCategoryFromSupabase,
+  logUserActivitySilent
 } from '../../services/supabaseService';
 import { CustomSelect } from '../CustomSelect';
 import { SpreadsheetPreview } from '../SpreadsheetPreview';
@@ -464,6 +465,12 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({
       setSelectedFile(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
       setShowAddArticleModal(false);
+
+      logUserActivitySilent({
+        userName: currentUserName,
+        department: currentUserDivision,
+        action: `Pengajuan dokumen Knowledge Base "${title}" (${selectedCategory})`
+      });
 
       triggerToast('Dokumen Berhasil Dikirim');
     } catch (err) {

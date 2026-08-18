@@ -255,7 +255,6 @@ export const DataPenggunaView: React.FC<DataPenggunaViewProps> = ({
     const validUsers = parsedUsers.filter((u) => u.valid);
     if (validUsers.length === 0) {
       setImportError('Tidak ada data pengguna valid yang dapat diimpor.');
-      triggerToast('⚠️ Tidak ada data pengguna valid yang dapat diimpor.');
       return;
     }
 
@@ -267,7 +266,6 @@ export const DataPenggunaView: React.FC<DataPenggunaViewProps> = ({
       const dupEmail = duplicateUsers[0].email;
       const errorMsg = `Email "${dupEmail}" sudah terdaftar dalam sistem. Data tidak dapat disimpan.`;
       setImportError(errorMsg);
-      triggerToast(`⚠️ ${errorMsg}`);
       return;
     }
 
@@ -305,8 +303,6 @@ export const DataPenggunaView: React.FC<DataPenggunaViewProps> = ({
     setShowImportModal(false);
     setImportFileName('');
     setImportError(null);
-
-    triggerToast(`Berhasil mengimpor ${validUsers.length} pengguna sekaligus dengan password default 'password123'!`);
   };
 
   const handleAddUserSubmit = (e: React.FormEvent) => {
@@ -365,8 +361,6 @@ export const DataPenggunaView: React.FC<DataPenggunaViewProps> = ({
     setNewRole('Karyawan');
     setNewDivision('Talent Development');
     setAddUserError(null);
-
-    triggerToast(`Pengguna ${newUser.name} berhasil ditambahkan dengan password default 'password123'. User akan diminta ubah password.`);
   };
 
   const handleOpenEditModal = (user: User) => {
@@ -436,7 +430,6 @@ export const DataPenggunaView: React.FC<DataPenggunaViewProps> = ({
 
   const handleConfirmBulkDelete = () => {
     selectedUserIds.forEach((id) => onDeleteUser(id));
-    triggerToast(`Berhasil menghapus ${selectedUserIds.length} pengguna sekaligus.`);
     setSelectedUserIds([]);
     setShowBulkDeleteConfirmModal(false);
   };
@@ -1160,18 +1153,6 @@ export const DataPenggunaView: React.FC<DataPenggunaViewProps> = ({
               </button>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Toast Notification */}
-      {toastMessage && (
-        <div className="fixed bottom-8 right-8 bg-slate-900/95 dark:bg-slate-800/95 backdrop-blur-md text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3.5 z-50 border border-slate-700/60 max-w-md animate-in slide-in-from-bottom-5 duration-200">
-          {!toastMessage.includes('⚠️') && !toastMessage.includes('❌') && !toastMessage.toLowerCase().includes('salah') && !toastMessage.toLowerCase().includes('gagal') ? (
-            <span className="material-symbols-outlined text-emerald-400 text-2xl shrink-0">check_circle</span>
-          ) : (
-            <span className="material-symbols-outlined text-amber-400 text-2xl shrink-0">info</span>
-          )}
-          <span className="text-sm font-bold leading-relaxed">{toastMessage}</span>
         </div>
       )}
     </div>
